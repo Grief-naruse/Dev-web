@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Ticketing App</title>
+    <title>Connexion</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="login-page">
-    <div class="card" style="width: 100%; max-width: 400px;">
+<body class="login-page"> <div class="card" style="width: 100%; max-width: 400px;">
         <h2 style="text-align: center; margin-bottom: 20px;">Connexion</h2>
         
-        <form id="loginForm">
+        <form id="loginForm" action="dashboard.php">
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" placeholder="admin@esn.com" required>
@@ -19,7 +18,7 @@
                 <label for="password">Mot de passe</label>
                 <input type="password" id="password" name="password" required>
                 <div style="text-align: right; margin-top: 5px;">
-                    <a href="forgot-password.html" style="font-size: 0.8rem; color: #666; text-decoration: none;">Mot de passe oublié ?</a>
+                    <a href="forgot-password.php" style="font-size: 0.8rem; color: #666; text-decoration: none;">Mot de passe oublié ?</a>
                 </div>
             </div>
             <button type="submit" style="width: 100%;">Se connecter</button>
@@ -27,7 +26,7 @@
 
         <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="font-size: 0.9rem;">Pas encore de compte ?</p>
-            <a href="register.html" style="color: var(--accent-color); font-weight: bold; text-decoration: none;">Créer un compte</a>
+            <a href="register.php" style="color: var(--accent-color); font-weight: bold; text-decoration: none;">Créer un compte</a>
         </div>
     </div>
     <script src="js/app.js"></script>

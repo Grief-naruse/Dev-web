@@ -1,3 +1,18 @@
+<?php
+$message = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $client = htmlspecialchars($_POST['client']);
+    $name = htmlspecialchars($_POST['name']);
+    $hours = htmlspecialchars($_POST['hours']);
+
+    if (!empty($client) && !empty($name) && !empty($hours)) {
+        $message = '<div class="alert alert-success">✅ Projet "'. $name .'" créé avec succès ! <a href="projects.php">Voir la liste</a></div>';
+    } else {
+        $message = '<div class="alert alert-error">❌ Veuillez remplir les champs obligatoires.</div>';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,17 +26,17 @@
         <h2>Ticketing App</h2>
         <nav>
             <ul>
-                <li><a href="dashboard.html">Tableau de bord</a></li>
-                <li><a href="projects.html" class="active">Projets</a></li>
-                <li><a href="tickets.html">Tickets</a></li>
-                <li><a href="settings.html">Paramètres</a></li>
+                <li><a href="dashboard.php">Tableau de bord</a></li>
+                <li><a href="projects.php" class="active">Projets</a></li>
+                <li><a href="tickets.php">Tickets</a></li>
+                <li><a href="settings.php">Paramètres</a></li>
             </ul>
         </nav>
         <div class="user-info">
              <p style="margin-bottom: 5px; font-size: 0.8rem; opacity: 0.7;">Connecté en tant que :</p>
-             <a href="profile.html" style="color: white; font-weight: bold; text-decoration: none;">Ilan Rubaud</a>
+             <a href="profile.php" style="color: white; font-weight: bold; text-decoration: none;">Ilan Rubaud</a>
              <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                <a href="index.html" style="color: #bdc3c7; font-size: 0.8rem; text-decoration: none;">➜ Déconnexion</a>
+                <a href="index.php" style="color: #bdc3c7; font-size: 0.8rem; text-decoration: none;">➜ Déconnexion</a>
             </div>
         </div>
     </aside>
@@ -31,9 +46,11 @@
             <h1>Nouveau Projet</h1>
         </header>
 
-        <form id="projectForm" class="card" novalidate>
+        <?php if($message) echo $message; ?>
+
+        <form action="" method="POST" id="projectForm" class="card">
             <div class="form-group">
-                <label for="client">Client</label>
+                <label for="client">Client *</label>
                 <select id="client" name="client" required>
                     <option value="">-- Sélectionner un client --</option>
                     <option value="1">Boutique Mode SA</option>
@@ -42,7 +59,7 @@
             </div>
 
             <div class="form-group">
-                <label for="p-name">Nom du projet</label>
+                <label for="p-name">Nom du projet *</label>
                 <input type="text" id="p-name" name="name" placeholder="Ex: Refonte Intranet" required>
             </div>
 
@@ -56,7 +73,7 @@
 
             <div class="grid-2">
                 <div class="form-group">
-                    <label for="hours">Enveloppe d'heures</label>
+                    <label for="hours">Enveloppe d'heures *</label>
                     <input type="number" id="hours" name="hours" placeholder="Ex: 50" required>
                 </div>
                 <div class="form-group">
@@ -67,7 +84,7 @@
 
             <div style="margin-top: 20px;">
                 <button type="submit">Créer le projet</button>
-                <a href="projects.html" style="margin-left: 20px; color: #666; text-decoration: none;">Annuler</a>
+                <a href="projects.php" style="margin-left: 20px; color: #666; text-decoration: none;">Annuler</a>
             </div>
         </form>
     </main>

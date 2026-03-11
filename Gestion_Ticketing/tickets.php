@@ -1,3 +1,7 @@
+<?php
+// On charge les données simulées
+require 'includes/data.php';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,17 +15,17 @@
         <h2>Ticketing App</h2>
         <nav>
             <ul>
-                <li><a href="dashboard.html">Tableau de bord</a></li>
-                <li><a href="projects.html">Projets</a></li>
-                <li><a href="tickets.html" class="active">Tickets</a></li>
-                <li><a href="settings.html">Paramètres</a></li>
+                <li><a href="dashboard.php">Tableau de bord</a></li>
+                <li><a href="projects.php">Projets</a></li>
+                <li><a href="tickets.php" class="active">Tickets</a></li>
+                <li><a href="settings.php">Paramètres</a></li>
             </ul>
         </nav>
         <div class="user-info">
              <p style="margin-bottom: 5px; font-size: 0.8rem; opacity: 0.7;">Connecté en tant que :</p>
-             <a href="profile.html" style="color: white; font-weight: bold; text-decoration: none;">Ilan Rubaud</a>
+             <a href="profile.php" style="color: white; font-weight: bold; text-decoration: none;">Ilan Rubaud</a>
              <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                <a href="index.html" style="color: #bdc3c7; font-size: 0.8rem; text-decoration: none;">➜ Déconnexion</a>
+                <a href="index.php" style="color: #bdc3c7; font-size: 0.8rem; text-decoration: none;">➜ Déconnexion</a>
             </div>
         </div>
     </aside>
@@ -29,7 +33,7 @@
     <main class="content">
         <header>
             <h1>Tous les tickets</h1>
-            <a href="ticket-new.html" class="btn">+ Nouveau Ticket</a>
+            <a href="ticket-new.php" class="btn">+ Nouveau Ticket</a>
         </header>
 
         <div class="card">
@@ -43,7 +47,6 @@
                     <option value="">Tous les statuts</option>
                     <option value="En cours">En cours</option>
                     <option value="À valider">À valider</option>
-                    <option value="Inclus">Inclus</option>
                 </select>
             </div>
 
@@ -59,22 +62,24 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <?php foreach($tickets as $ticket): ?>
                     <tr>
-                        <td>#104</td>
-                        <td>Erreur 500 au paiement</td>
-                        <td>Site E-commerce</td>
-                        <td><span class="badge type-included">Inclus</span></td>
-                        <td><span class="badge status-progress">En cours</span></td>
-                        <td><a href="ticket-detail.html">Voir</a></td>
+                        <td>#<?php echo $ticket['id']; ?></td>
+                        <td><?php echo htmlspecialchars($ticket['title']); ?></td>
+                        <td><?php echo htmlspecialchars($ticket['project']); ?></td>
+                        <td>
+                            <span class="badge <?php echo $ticket['type']; ?>">
+                                <?php echo $ticket['type_label']; ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge <?php echo $ticket['status']; ?>">
+                                <?php echo $ticket['status_label']; ?>
+                            </span>
+                        </td>
+                        <td><a href="ticket-detail.php?id=<?php echo $ticket['id']; ?>">Voir</a></td>
                     </tr>
-                    <tr>
-                        <td>#105</td>
-                        <td>Dév nouvelle feature PDF</td>
-                        <td>CRM Intranet</td>
-                        <td><span class="badge type-billable">Facturable</span></td>
-                        <td><span class="badge status-new">À valider</span></td>
-                        <td><a href="ticket-detail.html">Voir</a></td>
-                    </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>

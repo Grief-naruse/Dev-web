@@ -1,3 +1,9 @@
+<?php
+$message = "";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $message = '<div class="alert alert-success">✅ Préférences enregistrées !</div>';
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,17 +17,17 @@
         <h2>Ticketing App</h2>
         <nav>
             <ul>
-                <li><a href="dashboard.html">Tableau de bord</a></li>
-                <li><a href="projects.html">Projets</a></li>
-                <li><a href="tickets.html">Tickets</a></li>
-                <li><a href="settings.html" class="active">Paramètres</a></li>
+                <li><a href="dashboard.php">Tableau de bord</a></li>
+                <li><a href="projects.php">Projets</a></li>
+                <li><a href="tickets.php">Tickets</a></li>
+                <li><a href="settings.php" class="active">Paramètres</a></li>
             </ul>
         </nav>
         <div class="user-info">
              <p style="margin-bottom: 5px; font-size: 0.8rem; opacity: 0.7;">Connecté en tant que :</p>
-             <a href="profile.html" style="color: white; font-weight: bold; text-decoration: none;">Ilan Rubaud</a>
+             <a href="profile.php" style="color: white; font-weight: bold; text-decoration: none;">Ilan Rubaud</a>
              <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                <a href="index.html" style="color: #bdc3c7; font-size: 0.8rem; text-decoration: none;">➜ Déconnexion</a>
+                <a href="index.php" style="color: #bdc3c7; font-size: 0.8rem; text-decoration: none;">➜ Déconnexion</a>
             </div>
         </div>
     </aside>
@@ -31,17 +37,19 @@
             <h1>Paramètres de l'application</h1>
         </header>
 
-        <form id="settingsForm">
+        <?php if($message) echo $message; ?>
+
+        <form action="" method="POST" id="settingsForm">
             <section class="card">
                 <h3>🔔 Notifications</h3>
                 <div style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
                         <div><strong>Nouveau ticket assigné</strong></div>
-                        <input type="checkbox" checked>
+                        <input type="checkbox" name="notif_new" checked>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                         <div><strong>Rapport hebdomadaire</strong></div>
-                        <input type="checkbox">
+                        <input type="checkbox" name="notif_report">
                     </div>
                 </div>
             </section>
@@ -50,7 +58,7 @@
                 <h3>🎨 Préférences</h3>
                 <div class="form-group">
                     <label>Langue</label>
-                    <select><option>Français</option><option>English</option></select>
+                    <select name="lang"><option>Français</option><option>English</option></select>
                 </div>
                 
                 <button type="submit" class="btn">Enregistrer tout</button>

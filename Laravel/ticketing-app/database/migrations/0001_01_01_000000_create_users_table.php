@@ -16,6 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            
+            // 🛡️ La colonne manquante pour la gestion des accès
+            $table->enum('role', ['admin', 'collaborator', 'client'])->default('collaborator');
+            
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

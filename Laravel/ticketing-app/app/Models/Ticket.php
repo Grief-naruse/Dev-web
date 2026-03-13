@@ -5,42 +5,73 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ticket extends Model
 {
     use HasFactory;
 
-    // Autorise l'insertion en masse pour ces colonnes
+    /**
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'project_id', 'title', 'description', 
-        'status', 'priority', 'estimated_hours', 'spent_hours'
+        'project_id',
+        'author_id',
+        'assigned_to',
+        'title',
+        'description',
+        'status',
+        'priority',
+        'type', // 'included' ou 'billable'
+        'estimated_hours'
     ];
 
-    /**
-     * Relation : Un ticket appartient à un projet.
-     */
+    // --- RELATIONS ---
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
     /**
-     * Calcul automatique : Heures restantes
-     * Accessible dans Blade via : $ticket->remaining_hours
+     * L'utilisateur qui a ouvert le ticket.
      */
-    public function getRemainingHoursAttribute(): float
+    public function author(): BelongsTo
     {
-        $remaining = $this->estimated_hours - $this->spent_hours;
-        // Si on a passé plus de temps que prévu, il reste 0 heure (pas de négatif)
-        return $remaining > 0 ? (float) $remaining : 0.0;
+        return $this->belongsTo(User::class, 'author_id');
     }
 
     /**
-     * Calcul automatique : Heures à facturer
-     * Accessible dans Blade via : $ticket->billable_hours
+     * Le collaborateur chargé de résoudre le ticket.
      */
-    public function getBillableHoursAttribute(): float
+    public function assignee(): BelongsTo
     {
-        return (float) $this->spent_hours;
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * Historique des temps passés sur ce ticket précis.
+     */
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(TimeEntry::class);
+    }
+
+    // --- LOGIQUE MÉTIER (Business Logic) ---
+
+    /**
+     * Somme des heures réellement travaillées sur ce ticket.
+     */
+    public function getTotalSpentHoursAttribute(): float
+    {
+        return (float) $this->timeEntries()->sum('duration');
+    }
+
+    /**
+     * Détermine si le ticket est considéré comme critique.
+     */
+    public function isUrgent(): bool
+    {
+        return in_array($this->priority, ['high', 'urgent']);
     }
 }

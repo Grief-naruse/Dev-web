@@ -3,66 +3,93 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Project; // 👈 L'importation vitale de ton Modèle
 
 class ProjectController extends Controller
 {
     /**
-     * Simulation d'une base de données de projets.
+     * READ : Affiche la liste de tous les projets
      */
-    private function mockProjects(): array
+    public function index()
     {
-        return [
-            ['id' => 1, 'name' => 'Site E-commerce ESIEA', 'client' => 'ESIEA', 'type' => 'Forfait', 'allocated_hours' => 50, 'used_hours' => 12],
-            ['id' => 4, 'name' => 'Application Ticketing', 'client' => 'Interne', 'type' => 'Régie', 'allocated_hours' => 100, 'used_hours' => 0],
-        ];
-    }
-
-    // 1. Liste des projets
-    public function index(): View
-    {
-        $projects = $this->mockProjects();
+        // On demande à Eloquent de récupérer TOUS les projets dans la BDD
+        $projects = Project::all(); 
+        
         return view('projects.index', compact('projects'));
     }
 
-    // 2. Formulaire de création
-    public function create(): View
+    /**
+     * Affiche le formulaire de création
+     */
+    public function create()
     {
         return view('projects.create');
     }
 
-    // 3. Action de sauvegarde (Simulation)
-    public function store(Request $request): RedirectResponse
+    /**
+     * CREATE : Enregistre un nouveau projet dans la BDD
+     */
+    public function store(Request $request)
     {
-        // En Étape 6, on ferait Project::create($request->all());
-        return redirect('/projects')->with('success', 'Le projet a été créé avec succès (Simulé).');
+        // 1. Validation des données envoyées par le formulaire
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:active,completed,on_hold'
+        ]);
+
+        // 2. Création et sauvegarde en une seule ligne !
+        Project::create($request->all());
+
+        // 3. Redirection avec le message SweetAlert
+        return redirect('/projects')->with('success', 'Projet créé avec succès !');
     }
 
-    // 4. Détails d'un projet
-    public function show($id): View
+    /**
+     * READ : Affiche les détails d'un projet précis
+     */
+    public function show(Project $project)
     {
-        // On simule la recherche par ID
-        $project = ['id' => $id, 'name' => 'Projet ' . $id, 'client' => 'Client Test', 'type' => 'Forfait', 'allocated_hours' => 50, 'used_hours' => 5];
-        return view('projects.show', compact('project'));
+        // Grâce à la relation définie dans le modèle, on récupère les tickets liés
+        $tickets = $project->tickets; 
+
+        return view('projects.show', compact('project', 'tickets'));
     }
 
-    // 5. Formulaire de modification
-    public function edit($id): View
+    /**
+     * Affiche le formulaire de modification
+     */
+    public function edit(Project $project)
     {
-        $project = ['id' => $id, 'name' => 'Projet ' . $id, 'client' => 'Client Test'];
         return view('projects.edit', compact('project'));
     }
 
-    // 6. Mise à jour (Simulation)
-    public function update(Request $request, $id): RedirectResponse
+    /**
+     * UPDATE : Met à jour le projet dans la BDD
+     */
+    public function update(Request $request, Project $project)
     {
-        return redirect('/projects/' . $id)->with('success', 'Projet mis à jour (Simulé).');
+        // 1. Validation
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:active,completed,on_hold'
+        ]);
+
+        // 2. Mise à jour magique
+        $project->update($request->all());
+
+        return redirect('/projects')->with('success', 'Projet mis à jour !');
     }
 
-    // 7. Suppression (Simulation)
-    public function destroy($id): RedirectResponse
+    /**
+     * DELETE : Supprime le projet de la BDD
+     */
+    public function destroy(Project $project)
     {
-        return redirect('/projects')->with('success', 'Projet supprimé (Simulé).');
+        // La suppression "en cascade" s'occupera de supprimer ses tickets liés
+        $project->delete();
+
+        return redirect('/projects')->with('success', 'Projet supprimé définitivement !');
     }
 }

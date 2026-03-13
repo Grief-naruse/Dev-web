@@ -14,17 +14,24 @@ return new class extends Migration
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
             
-            // 🔗 La clé étrangère : relie ce ticket à un projet existant
+            // 🔗 Liaisons (Clés étrangères)
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->foreignId('author_id')->constrained('users'); // Qui a créé le ticket
+            $table->foreignId('assigned_to')->nullable()->constrained('users'); // Qui s'en occupe
             
             $table->string('title');
             $table->text('description');
-            $table->enum('status', ['new', 'progress', 'done', 'refused'])->default('new');
-            $table->enum('priority', ['Basse', 'Moyenne', 'Haute', 'Urgente'])->default('Moyenne');
             
-            // ⏱️ Colonnes pour la gestion du temps (Étape 6)
+            // 🚦 Statuts demandés dans ton TP
+            $table->enum('status', [
+                'new', 'progress', 'pending_client', 'done', 'to_validate', 'validated', 'refused'
+            ])->default('new');
+            
+            // ⚡ Priorité et Type
+            $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
+            $table->enum('type', ['included', 'billable'])->default('included');
+            
             $table->decimal('estimated_hours', 8, 2)->default(0);
-            $table->decimal('spent_hours', 8, 2)->default(0);
             
             $table->timestamps();
         });

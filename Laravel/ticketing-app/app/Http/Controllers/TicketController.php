@@ -3,87 +3,94 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Ticket;
+use App\Models\Project; // On importe aussi Project car on en aura besoin pour lister les projets dans le formulaire
 
 class TicketController extends Controller
 {
     /**
-     * Simulation de données pour les tickets.
+     * READ : Affiche la liste de tous les tickets
      */
-    private function mockTickets(): array
+    public function index()
     {
-        return [
-            [
-                'id' => 101, 
-                'title' => 'Bug affichage menu mobile', 
-                'project_name' => 'Site E-commerce ESIEA',
-                'status' => 'new', 
-                'priority' => 'Haute',
-                'description' => 'Le menu burger ne s\'ouvre pas sur iPhone.'
-            ],
-            [
-                'id' => 102, 
-                'title' => 'Ajout bouton export PDF', 
-                'project_name' => 'Application Ticketing',
-                'status' => 'progress', 
-                'priority' => 'Moyenne',
-                'description' => 'Besoin d\'extraire les rapports en PDF.'
-            ],
-        ];
-    }
-
-    // 1. Liste des tickets
-    public function index(): View
-    {
-        $tickets = $this->mockTickets();
+        // On récupère tous les tickets en incluant les données du projet lié (Eager Loading)
+        $tickets = Ticket::with('project')->get();
         return view('tickets.index', compact('tickets'));
     }
 
-    // 2. Formulaire de création
-    public function create(): View
+    /**
+     * Affiche le formulaire de création
+     */
+    public function create()
     {
-        // En étape 6, on récupèrerait la liste des projets ici pour le <select>
-        $projects = [['id' => 1, 'name' => 'Site E-commerce'], ['id' => 4, 'name' => 'App Ticketing']];
+        // On a besoin de la liste des projets pour le menu déroulant du ticket
+        $projects = Project::all();
         return view('tickets.create', compact('projects'));
     }
 
-    // 3. Sauvegarde (Simulation)
-    public function store(Request $request): RedirectResponse
+    /**
+     * CREATE : Enregistre le ticket dans la BDD
+     */
+    public function store(Request $request)
     {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'status' => 'required|in:new,progress,done,refused',
+            'priority' => 'required|in:Basse,Moyenne,Haute,Urgente',
+            'estimated_hours' => 'numeric|min:0',
+            'spent_hours' => 'numeric|min:0'
+        ]);
+
+        Ticket::create($request->all());
+
         return redirect('/tickets')->with('success', 'Ticket créé avec succès !');
     }
 
-    // 4. Détails d'un ticket
-    public function show($id): View
+    /**
+     * READ : Affiche les détails d'un ticket
+     */
+    public function show(Ticket $ticket)
     {
-        $ticket = [
-            'id' => $id, 
-            'title' => 'Bug affichage menu mobile', 
-            'project_name' => 'Site E-commerce ESIEA',
-            'status' => 'new',
-            'description' => 'Le menu burger ne s\'ouvre pas sur iPhone.',
-            'created_at' => '2026-03-11'
-        ];
         return view('tickets.show', compact('ticket'));
     }
 
-    // 5. Formulaire de modification
-    public function edit($id): View
+    /**
+     * Affiche le formulaire de modification
+     */
+    public function edit(Ticket $ticket)
     {
-        $ticket = ['id' => $id, 'title' => 'Bug affichage menu mobile', 'description' => 'Le menu burger ne s\'ouvre pas sur iPhone.'];
-        return view('tickets.edit', compact('ticket'));
+        $projects = Project::all();
+        return view('tickets.edit', compact('ticket', 'projects'));
     }
 
-    // 6. Mise à jour (Simulation)
-    public function update(Request $request, $id): RedirectResponse
+    /**
+     * UPDATE : Met à jour le ticket dans la BDD
+     */
+    public function update(Request $request, Ticket $ticket)
     {
-        return redirect('/tickets/'.$id)->with('success', 'Ticket mis à jour !');
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'status' => 'required|in:new,progress,done,refused',
+            'priority' => 'required|in:Basse,Moyenne,Haute,Urgente',
+            'estimated_hours' => 'numeric|min:0',
+            'spent_hours' => 'numeric|min:0'
+        ]);
+
+        $ticket->update($request->all());
+
+        return redirect('/tickets')->with('success', 'Ticket mis à jour !');
     }
 
-    // 7. Suppression (Simulation)
-    public function destroy($id): RedirectResponse
+    /**
+     * DELETE : Supprime le ticket
+     */
+    public function destroy(Ticket $ticket)
     {
-        return redirect('/tickets')->with('success', 'Ticket supprimé.');
+        $ticket->delete();
+        return redirect('/tickets')->with('success', 'Ticket supprimé définitivement !');
     }
 }

@@ -3,11 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index()
+    /**
+     * Affiche la page d'accueil du tableau de bord.
+     */
+    public function index(): View
     {
-        return view('dashboard.index'); // On n'envoie pas de données pour l'instant
+        // Simulation des statistiques pour l'Étape 5
+        // Ces chiffres seront remplacés par des requêtes SQL (Eloquent) à l'Étape 6
+        $stats = [
+            'total_projects' => 2,
+            'active_tickets' => 5,
+            'pending_hours'  => 14.5,
+            'completed_tasks'=> 12
+        ];
+
+        // On passe les données à la vue via la fonction compact()
+        return view('dashboard', compact('stats'));
     }
 }

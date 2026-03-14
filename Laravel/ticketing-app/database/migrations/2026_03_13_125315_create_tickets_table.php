@@ -16,16 +16,18 @@ return new class extends Migration
             
             // 🔗 Liaisons (Clés étrangères)
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
-            $table->foreignId('author_id')->constrained('users'); // Qui a créé le ticket
-            $table->foreignId('assigned_to')->nullable()->constrained('users'); // Qui s'en occupe
+            
+            // ⚠️ Rendus 'nullable' temporairement en attendant l'installation de l'Authentification
+            $table->foreignId('author_id')->nullable()->constrained('users'); 
+            $table->foreignId('assigned_to')->nullable()->constrained('users'); 
             
             $table->string('title');
-            $table->text('description');
+            $table->text('description')->nullable(); // Sécurisé : accepte désormais les champs vides
             
-            // 🚦 Statuts demandés dans ton TP
+            // 🚦 Statuts standardisés avec notre interface et le FormRequest
             $table->enum('status', [
-                'new', 'progress', 'pending_client', 'done', 'to_validate', 'validated', 'refused'
-            ])->default('new');
+                'todo', 'in_progress', 'in_review', 'completed'
+            ])->default('todo');
             
             // ⚡ Priorité et Type
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');

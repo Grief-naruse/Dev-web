@@ -10,35 +10,39 @@ class TimeEntry extends Model
 {
     use HasFactory;
 
-    /**
-     * @var array<int, string>
-     */
+    // Les champs qu'on autorise à remplir via un formulaire
     protected $fillable = [
         'ticket_id',
         'user_id',
+        'date',
         'duration',
-        'work_date',
-        'comment'
+        'description',
+    ];
+
+    // On force 'date' à être un objet Carbon (pour pouvoir faire format('d/m/Y') dans les vues)
+    protected $casts = [
+        'date' => 'date',
+        'duration' => 'decimal:2',
     ];
 
     /**
-     * @var array<string, string>
+     * Une saisie de temps appartient à un Ticket.
      */
-    protected $casts = [
-        'work_date' => 'date',
-        'duration'  => 'float',
-    ];
-
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
     }
 
     /**
-     * Le collaborateur qui a déclaré ses heures.
+     * Une saisie de temps est effectuée par un Utilisateur.
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function timeEntries()
+    {
+        return $this->hasMany(TimeEntry::class);
     }
 }

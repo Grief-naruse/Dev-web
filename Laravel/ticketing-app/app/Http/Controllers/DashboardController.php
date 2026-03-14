@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Project;
+use App\Models\Ticket;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    /**
-     * Affiche la page d'accueil du tableau de bord.
-     */
     public function index(): View
     {
-        // Simulation des statistiques pour l'Étape 5
-        // Ces chiffres seront remplacés par des requêtes SQL (Eloquent) à l'Étape 6
+        // 1. On prépare EXACTEMENT les statistiques demandées par Chart.js et tes cartes
         $stats = [
-            'total_projects' => 2,
-            'active_tickets' => 5,
-            'pending_hours'  => 14.5,
-            'completed_tasks'=> 12
+            'total_projects'  => Project::count(),
+            'active_tickets'  => Ticket::count(),
+            'pending_hours'   => 15, // Chiffre temporaire pour débloquer le visuel
+            'completed_tasks' => 8,  // Chiffre temporaire pour débloquer le visuel
         ];
 
-        // On passe les données à la vue via la fonction compact()
-        return view('dashboard', compact('stats'));
+        // 2. On prépare la variable $user attendue par le header de ta vue
+        $user = [
+            'name' => 'Ilan Rubaud'
+        ];
+
+        // 3. On envoie le tout à la vue
+        return view('dashboard', compact('stats', 'user'));
     }
 }

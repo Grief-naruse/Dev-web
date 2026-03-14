@@ -2,94 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Project; // 👈 L'importation vitale de ton Modèle
+use App\Models\Project;
+use App\Models\Client;
+use App\Http\Requests\StoreProjectRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
     /**
-     * READ : Affiche la liste de tous les projets
+     * Affiche la liste des projets.
      */
-    public function index()
+    public function index(): View
     {
-        // On demande à Eloquent de récupérer TOUS les projets dans la BDD
-        $projects = Project::all(); 
+        // Eager Loading : On charge le client et on compte les tickets en une seule requête SQL optimisée.
+        $projects = Project::with('client')->withCount('tickets')->get();
         
         return view('projects.index', compact('projects'));
     }
 
     /**
-     * Affiche le formulaire de création
+     * Affiche le formulaire de création.
      */
-    public function create()
+    public function create(): View
     {
-        return view('projects.create');
+        // Pour lier un projet à un client, on a besoin de la liste des clients pour le <select>
+        // On ne prend que 'id' et 'name' pour ne pas surcharger la RAM inutilement.
+        $clients = Client::select('id', 'name')->orderBy('name')->get();
+        
+        return view('projects.create', compact('clients'));
     }
 
     /**
-     * CREATE : Enregistre un nouveau projet dans la BDD
+     * Enregistre le nouveau projet (protégé par StoreProjectRequest).
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request): RedirectResponse
     {
-        // 1. Validation des données envoyées par le formulaire
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|in:active,completed,on_hold'
-        ]);
+        Project::create($request->validated());
 
-        // 2. Création et sauvegarde en une seule ligne !
-        Project::create($request->all());
-
-        // 3. Redirection avec le message SweetAlert
-        return redirect('/projects')->with('success', 'Projet créé avec succès !');
+        return redirect()->route('dashboard') // Ou vers projects.index quand la route existera
+            ->with('success', 'Le projet a été créé avec succès et lié au client.');
     }
 
     /**
-     * READ : Affiche les détails d'un projet précis
+     * Affiche les détails d'un projet spécifique.
      */
-    public function show(Project $project)
+    public function show(int $id): View
     {
-        // Grâce à la relation définie dans le modèle, on récupère les tickets liés
-        $tickets = $project->tickets; 
-
-        return view('projects.show', compact('project', 'tickets'));
+        // On utilise findOrFail pour afficher une vraie erreur 404 si l'ID n'existe pas
+        $project = Project::with(['client', 'tickets'])->findOrFail($id);
+        
+        return view('projects.show', compact('project'));
     }
 
     /**
-     * Affiche le formulaire de modification
+     * Affiche le formulaire de modification.
      */
-    public function edit(Project $project)
+    public function edit(int $id): View
     {
-        return view('projects.edit', compact('project'));
+        $project = Project::findOrFail($id);
+        $clients = Client::select('id', 'name')->orderBy('name')->get();
+        
+        return view('projects.edit', compact('project', 'clients'));
     }
 
     /**
-     * UPDATE : Met à jour le projet dans la BDD
+     * Met à jour le projet.
      */
-    public function update(Request $request, Project $project)
+    public function update(StoreProjectRequest $request, int $id): RedirectResponse
     {
-        // 1. Validation
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|in:active,completed,on_hold'
-        ]);
+        $project = Project::findOrFail($id);
+        $project->update($request->validated());
 
-        // 2. Mise à jour magique
-        $project->update($request->all());
-
-        return redirect('/projects')->with('success', 'Projet mis à jour !');
+        return redirect()->route('dashboard')
+            ->with('success', 'Le projet a été mis à jour.');
     }
 
     /**
-     * DELETE : Supprime le projet de la BDD
+     * Supprime le projet.
      */
-    public function destroy(Project $project)
+    public function destroy(int $id): RedirectResponse
     {
-        // La suppression "en cascade" s'occupera de supprimer ses tickets liés
+        $project = Project::findOrFail($id);
+
+        // Sécurité Enterprise : On bloque la suppression s'il y a des tickets
+        if ($project->tickets()->count() > 0) {
+            return back()->with('error', 'Impossible de supprimer un projet qui contient des tickets. Clôturez-les d\'abord.');
+        }
+
         $project->delete();
 
-        return redirect('/projects')->with('success', 'Projet supprimé définitivement !');
+        return redirect()->route('dashboard')
+            ->with('success', 'Projet supprimé définitivement.');
     }
 }

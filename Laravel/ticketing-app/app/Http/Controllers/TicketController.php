@@ -2,95 +2,92 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ticket;
-use App\Models\Project; // On importe aussi Project car on en aura besoin pour lister les projets dans le formulaire
+use App\Models\Project;
+use App\Http\Requests\StoreTicketRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class TicketController extends Controller
 {
     /**
-     * READ : Affiche la liste de tous les tickets
+     * Liste tous les tickets.
      */
-    public function index()
+    public function index(): View
     {
-        // On récupère tous les tickets en incluant les données du projet lié (Eager Loading)
-        $tickets = Ticket::with('project')->get();
+        // Eager Loading : On charge le projet lié au ticket pour éviter le problème "N+1 queries"
+        // latest() permet d'afficher les tickets les plus récents en premier
+        $tickets = Ticket::with('project')->latest()->get();
+        
         return view('tickets.index', compact('tickets'));
     }
 
     /**
-     * Affiche le formulaire de création
+     * Affiche le formulaire de création.
      */
-    public function create()
+    public function create(): View
     {
-        // On a besoin de la liste des projets pour le menu déroulant du ticket
-        $projects = Project::all();
+        // On a besoin de la liste des projets actifs pour le menu déroulant
+        $projects = Project::select('id', 'name')->where('status', '!=', 'completed')->orderBy('name')->get();
+        
         return view('tickets.create', compact('projects'));
     }
 
     /**
-     * CREATE : Enregistre le ticket dans la BDD
+     * Enregistre le ticket dans la base.
      */
-    public function store(Request $request)
+    public function store(StoreTicketRequest $request): RedirectResponse
     {
-        $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|in:new,progress,done,refused',
-            'priority' => 'required|in:Basse,Moyenne,Haute,Urgente',
-            'estimated_hours' => 'numeric|min:0',
-            'spent_hours' => 'numeric|min:0'
-        ]);
+        Ticket::create($request->validated());
 
-        Ticket::create($request->all());
-
-        return redirect('/tickets')->with('success', 'Ticket créé avec succès !');
+        return redirect()->route('dashboard') // On changera vers tickets.index quand la vue existera
+            ->with('success', 'Le ticket a été créé et rattaché au projet.');
     }
 
     /**
-     * READ : Affiche les détails d'un ticket
+     * Affiche les détails d'un ticket.
      */
-    public function show(Ticket $ticket)
+    public function show(int $id): View
     {
+        $ticket = Ticket::with('project')->findOrFail($id);
+        
         return view('tickets.show', compact('ticket'));
     }
 
     /**
-     * Affiche le formulaire de modification
+     * Affiche le formulaire de modification.
      */
-    public function edit(Ticket $ticket)
+    public function edit(int $id): View
     {
-        $projects = Project::all();
+        $ticket = Ticket::findOrFail($id);
+        
+        // On récupère les projets pour pouvoir potentiellement déplacer le ticket
+        $projects = Project::select('id', 'name')->orderBy('name')->get();
+        
         return view('tickets.edit', compact('ticket', 'projects'));
     }
 
     /**
-     * UPDATE : Met à jour le ticket dans la BDD
+     * Met à jour le ticket.
      */
-    public function update(Request $request, Ticket $ticket)
+    public function update(StoreTicketRequest $request, int $id): RedirectResponse
     {
-        $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|in:new,progress,done,refused',
-            'priority' => 'required|in:Basse,Moyenne,Haute,Urgente',
-            'estimated_hours' => 'numeric|min:0',
-            'spent_hours' => 'numeric|min:0'
-        ]);
+        $ticket = Ticket::findOrFail($id);
+        $ticket->update($request->validated());
 
-        $ticket->update($request->all());
-
-        return redirect('/tickets')->with('success', 'Ticket mis à jour !');
+        return redirect()->route('dashboard')
+            ->with('success', 'Le ticket a été mis à jour.');
     }
 
     /**
-     * DELETE : Supprime le ticket
+     * Supprime le ticket.
      */
-    public function destroy(Ticket $ticket)
+    public function destroy(int $id): RedirectResponse
     {
+        $ticket = Ticket::findOrFail($id);
         $ticket->delete();
-        return redirect('/tickets')->with('success', 'Ticket supprimé définitivement !');
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Le ticket a été supprimé.');
     }
 }

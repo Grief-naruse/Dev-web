@@ -4,95 +4,134 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Client;
-use App\Http\Requests\StoreProjectRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
     /**
-     * Affiche la liste des projets.
+     * Afficher la liste des projets (Filtrée selon le rôle)
      */
-    public function index(): View
+    public function index()
     {
-        // Eager Loading : On charge le client et on compte les tickets en une seule requête SQL optimisée.
-        $projects = Project::with('client')->withCount('tickets')->get();
-        
+        $user = Auth::user();
+
+        if ($user->isAdmin()) {
+            // 👑 Le patron voit tout
+            $projects = Project::with('client')->get();
+            
+        } elseif ($user->isCollaborator()) {
+            // 🧑‍💻 Le collaborateur ne voit que SES projets (via la table pivot)
+            $projects = $user->projects()->with('client')->get();
+            
+        } else {
+            // 👤 Le client (On affichera ses projets une fois son compte lié à une entreprise)
+            // Pour l'instant, on sécurise en renvoyant une collection vide.
+            $projects = collect();
+        }
+
         return view('projects.index', compact('projects'));
     }
 
     /**
-     * Affiche le formulaire de création.
+     * Afficher le formulaire de création
      */
-    public function create(): View
+    public function create()
     {
-        // Pour lier un projet à un client, on a besoin de la liste des clients pour le <select>
-        // On ne prend que 'id' et 'name' pour ne pas surcharger la RAM inutilement.
-        $clients = Client::select('id', 'name')->orderBy('name')->get();
-        
+        // Sécurité : Seul l'admin peut créer un projet
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Seul un administrateur peut créer un projet.');
+        }
+
+        $clients = Client::all();
         return view('projects.create', compact('clients'));
     }
 
     /**
-     * Enregistre le nouveau projet (protégé par StoreProjectRequest).
+     * Enregistrer un nouveau projet
      */
-    public function store(StoreProjectRequest $request): RedirectResponse
+    public function store(Request $request)
     {
-        Project::create($request->validated());
+        if (!Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
-        return redirect()->route('dashboard') // Ou vers projects.index quand la route existera
-            ->with('success', 'Le projet a été créé avec succès et lié au client.');
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'client_id' => 'required|exists:clients,id',
+            'status' => 'required|in:active,completed',
+            'included_hours' => 'required|numeric|min:0',
+        ]);
+
+        Project::create($validated);
+
+        return redirect('/projects')->with('success', 'Le projet a été créé avec succès.');
     }
 
     /**
-     * Affiche les détails d'un projet spécifique.
+     * Afficher un projet spécifique
      */
-    public function show(int $id): View
+    public function show(Project $project)
     {
-        // On utilise findOrFail pour afficher une vraie erreur 404 si l'ID n'existe pas
-        $project = Project::with(['client', 'tickets'])->findOrFail($id);
-        
+        $user = Auth::user();
+
+        // 🛡️ Vérification des droits d'accès à CE projet précis
+        if ($user->isCollaborator() && !$user->projects->contains($project->id)) {
+            abort(403, 'Vous n\'êtes pas affecté à ce projet.');
+        }
+
+        // TODO: Ajouter la vérification pour le Client plus tard
+
         return view('projects.show', compact('project'));
     }
 
     /**
-     * Affiche le formulaire de modification.
+     * Afficher le formulaire de modification
      */
-    public function edit(int $id): View
+    public function edit(Project $project)
     {
-        $project = Project::findOrFail($id);
-        $clients = Client::select('id', 'name')->orderBy('name')->get();
-        
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Seul un administrateur peut modifier un projet.');
+        }
+
+        $clients = Client::all();
         return view('projects.edit', compact('project', 'clients'));
     }
 
     /**
-     * Met à jour le projet.
+     * Mettre à jour le projet
      */
-    public function update(StoreProjectRequest $request, int $id): RedirectResponse
+    public function update(Request $request, Project $project)
     {
-        $project = Project::findOrFail($id);
-        $project->update($request->validated());
+        if (!Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Le projet a été mis à jour.');
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'client_id' => 'required|exists:clients,id',
+            'status' => 'required|in:active,completed',
+            'included_hours' => 'required|numeric|min:0',
+        ]);
+
+        $project->update($validated);
+
+        return redirect('/projects')->with('success', 'Le projet a bien été mis à jour.');
     }
 
     /**
-     * Supprime le projet.
+     * Supprimer le projet
      */
-    public function destroy(int $id): RedirectResponse
+    public function destroy(Project $project)
     {
-        $project = Project::findOrFail($id);
-
-        // Sécurité Enterprise : On bloque la suppression s'il y a des tickets
-        if ($project->tickets()->count() > 0) {
-            return back()->with('error', 'Impossible de supprimer un projet qui contient des tickets. Clôturez-les d\'abord.');
+        if (!Auth::user()->isAdmin()) {
+            abort(403);
         }
 
         $project->delete();
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Projet supprimé définitivement.');
+        return redirect('/projects')->with('success', 'Le projet a été supprimé.');
     }
 }

@@ -1,38 +1,32 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nouveau Client - Enterprise Ready</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-10">
-    <div class="max-w-2xl mx-auto">
-        <nav class="mb-6">
-            <a href="{{ route('clients.index') }}" class="text-blue-600 hover:underline">← Annuler et retourner à la liste</a>
-        </nav>
+@extends('layouts.app')
 
-        <div class="bg-white shadow-lg rounded-xl p-8 border border-gray-200">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Enregistrer un nouveau client</h1>
-
-            <form action="{{ route('clients.store') }}" method="POST">
-                @csrf <div class="mb-6">
-                    <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Nom de l'entreprise</label>
-                    <input type="text" name="name" id="name" 
-                           value="{{ old('name') }}"
-                           class="w-full px-4 py-3 rounded-lg border @error('name') border-red-500 @else border-gray-300 @enderror focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                           placeholder="ex: Google France">
-                    
-                    @error('name')
-                        <p class="mt-2 text-sm text-red-600 font-medium">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
-                    Créer la fiche client
-                </button>
-            </form>
-        </div>
+@section('content')
+<div class="container-fluid" style="padding: 20px; max-width: 800px; margin: auto;">
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url('/clients') }}" style="color: #3498db; text-decoration: none; font-weight: bold;">← Retour au portefeuille</a>
     </div>
-</body>
-</html>
+
+    <div class="card" style="background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h1 style="font-size: 1.8rem; color: #2c3e50; margin-bottom: 25px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
+            Ajouter un nouveau Client
+        </h1>
+
+        <form action="{{ url('/clients') }}" method="POST">
+            @csrf
+
+            <div style="margin-bottom: 20px;">
+                <label for="name" style="display: block; font-weight: bold; margin-bottom: 8px; color: #34495e;">Nom de l'entreprise (ou du client) *</label>
+                <input type="text" name="name" id="name" value="{{ old('name') }}" placeholder="Ex: Acme Corp" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
+                @error('name')
+                    <span style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <button type="submit" style="background-color: #3498db; color: white; padding: 12px 25px; border: none; border-radius: 4px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%;">
+                Enregistrer le client
+            </button>
+        </form>
+    </div>
+</div>
+@endsection

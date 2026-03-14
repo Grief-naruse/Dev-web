@@ -1,78 +1,69 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Détails Client - {{ $client->name }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-10">
+@extends('layouts.app')
 
-    <div class="max-w-6xl mx-auto">
-        <nav class="mb-6">
-            <a href="{{ route('clients.index') }}" class="text-blue-600 hover:underline">← Retour à la liste</a>
-        </nav>
-
-        <div class="flex justify-between items-end mb-8">
-            <div>
-                <h1 class="text-4xl font-extrabold text-gray-900">{{ $client->name }}</h1>
-                <p class="text-gray-500">Fiche client détaillée et suivi des contrats</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow-sm border">
-                <span class="block text-sm text-gray-500 uppercase font-bold">Projets totaux</span>
-                <span class="text-2xl font-bold text-blue-600">{{ $client->projects->count() }}</span>
-            </div>
-        </div>
-
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Projets en cours</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            @foreach($client->projects as $project)
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-xl font-bold text-gray-900">{{ $project->name }}</h3>
-                        <span class="px-2 py-1 text-xs font-bold uppercase rounded {{ $project->status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
-                            {{ $project->status }}
-                        </span>
-                    </div>
-
-                    <p class="text-gray-600 text-sm mb-6 line-clamp-2">{{ $project->description }}</p>
-
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm font-medium">
-                            <span class="text-gray-500">Consommation du forfait</span>
-                            <span class="{{ $project->remaining_hours < 0 ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ $project->total_spent_hours }} / {{ $project->included_hours }} h
-                            </span>
-                        </div>
-                        
-                        @php
-                            $percentage = ($project->total_spent_hours / $project->included_hours) * 100;
-                            $barColor = $percentage > 90 ? 'bg-red-500' : ($percentage > 70 ? 'bg-orange-400' : 'bg-blue-500');
-                        @endphp
-
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div class="{{ $barColor }} h-2.5 rounded-full" style="width: {{ min($percentage, 100) }}%"></div>
-                        </div>
-                        
-                        <p class="text-xs text-right {{ $project->remaining_hours < 0 ? 'text-red-500 font-bold' : 'text-gray-400' }}">
-                            @if($project->remaining_hours < 0)
-                                Dépassement de {{ abs($project->remaining_hours) }} heures
-                            @else
-                                Reste {{ $project->remaining_hours }} heures disponibles
-                            @endif
-                        </p>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-                    <span class="text-sm font-semibold text-gray-500">{{ $project->tickets->count() }} tickets ouverts</span>
-                    <a href="#" class="text-sm font-bold text-blue-600 hover:text-blue-800">Gérer le projet →</a>
-                </div>
-            </div>
-            @endforeach
+@section('content')
+<div class="container-fluid" style="padding: 20px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="{{ url('/clients') }}" style="color: #3498db; text-decoration: none; font-weight: bold;">← Retour au portefeuille</a>
+        <div>
+            <a href="{{ url('/clients/' . $client->id . '/edit') }}" style="background-color: #f39c12; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 10px;">
+                ✏️ Éditer la fiche
+            </a>
+            <form action="{{ url('/clients/' . $client->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('La suppression du client supprimera également TOUS ses projets et tickets. Continuer ?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" style="background-color: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                    🗑️ Supprimer
+                </button>
+            </form>
         </div>
     </div>
 
-</body>
-</html>
+    <div class="card" style="background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px;">
+        <h1 style="font-size: 2.5rem; color: #2c3e50; margin: 0 0 5px 0;">🏢 {{ $client->name }}</h1>
+        <p style="color: #7f8c8d; font-size: 1rem; margin: 0;">Client inscrit le {{ $client->created_at->format('d/m/Y') }}</p>
+    </div>
+
+    <h2 style="color: #34495e; margin-bottom: 15px; font-size: 1.5rem;">Projets associés ({{ $client->projects ? $client->projects->count() : 0 }})</h2>
+    
+    <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;">
+        @if($client->projects && $client->projects->count() > 0)
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead style="background-color: #ecf0f1; color: #2c3e50;">
+                    <tr>
+                        <th style="padding: 15px;">Nom du Projet</th>
+                        <th style="padding: 15px;">Statut</th>
+                        <th style="padding: 15px; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($client->projects as $project)
+                    <tr style="border-bottom: 1px solid #ecf0f1; transition: background-color 0.2s;">
+                        <td style="padding: 15px;">
+                            <a href="{{ url('/projects/' . $project->id) }}" style="color: #34495e; font-weight: bold; text-decoration: none; font-size: 1.1rem;">
+                                📁 {{ $project->name }}
+                            </a>
+                        </td>
+                        <td style="padding: 15px;">
+                            @if($project->status === 'completed')
+                                <span style="background-color: #e8f8f5; color: #27ae60; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">Terminé</span>
+                            @else
+                                <span style="background-color: #ebf5fb; color: #2980b9; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">En cours</span>
+                            @endif
+                        </td>
+                        <td style="padding: 15px; text-align: right;">
+                            <a href="{{ url('/projects/' . $project->id) }}" style="color: #3498db; text-decoration: none; font-weight: bold;">Accéder au projet →</a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <div style="padding: 40px; text-align: center; color: #7f8c8d; font-size: 1.1rem;">
+                Ce client n'a aucun projet actif pour le moment.<br>
+                <a href="{{ url('/projects/create') }}" style="color: #3498db; font-weight: bold; display: inline-block; margin-top: 10px;">Lui créer un projet</a>
+            </div>
+        @endif
+    </div>
+</div>
+@endsection

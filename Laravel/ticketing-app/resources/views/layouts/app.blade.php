@@ -3,58 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticketing App - Laravel</title>
+    <title>Gestion-Tickets ERP</title>
     
-    <script>
-        (function() {
-            if (localStorage.getItem('theme') === 'dark') {
-                document.documentElement.classList.add('dark-mode');
-            }
-        })();
-    </script>
-
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <style>
+        body { 
+            margin: 0; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background-color: #f4f6f9; 
+            display: flex; 
+            min-height: 100vh; 
+        }
+        
+        /* La fameuse barre latérale sombre */
+        .sidebar { 
+            width: 250px; 
+            background-color: #2c3e50; 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .sidebar-header { 
+            padding: 20px; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            border-bottom: 1px solid #34495e; 
+            text-align: center;
+        }
+        
+        .nav-link { 
+            display: block; 
+            padding: 15px 25px; 
+            color: #bdc3c7; 
+            text-decoration: none; 
+            font-weight: bold;
+            transition: all 0.2s; 
+            border-left: 4px solid transparent;
+        }
+        
+        .nav-link:hover { 
+            background-color: #34495e; 
+            color: white; 
+            border-left: 4px solid #3498db;
+        }
+        
+        /* Conteneur de la page de droite */
+        .main-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px;
+        }
+        
+        /* Le bloc en bas à gauche pour l'utilisateur connecté */
+        .user-info { 
+            margin-top: auto; 
+            padding: 20px; 
+            background-color: #1a252f; 
+        }
+        
+        .logout-btn { 
+            background-color: transparent; 
+            border: 1px solid #e74c3c; 
+            color: #e74c3c; 
+            cursor: pointer; 
+            padding: 8px 15px; 
+            font-weight: bold; 
+            border-radius: 4px;
+            width: 100%;
+            transition: 0.2s;
+            margin-top: 15px;
+        }
+        
+        .logout-btn:hover {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <div class="app-layout">
-        <aside class="sidebar">
-            <h2>Gestion-Tickets</h2>
-            <nav>
-                <ul>
-                    <li><a href="{{ url('/') }}" class="{{ Request::is('/') ? 'active' : '' }}">📊 Tableau de bord</a></li>
-                    
-                    <li>
-                        <a href="{{ route('clients.index') }}" class="{{ Request::is('clients*') ? 'active' : '' }}">🏢 Clients</a>
-                    </li>
 
-                    <li><a href="{{ url('/projects') }}" class="{{ Request::is('projects*') ? 'active' : '' }}">📁 Projets</a></li>
-                    <li><a href="{{ url('/tickets') }}" class="{{ Request::is('tickets*') ? 'active' : '' }}">🎫 Tickets</a></li>
-                </ul>
-                <hr style="margin: 20px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1);">
-                <ul>
-                    <li><a href="{{ url('/profile') }}" class="{{ Request::is('profile') ? 'active' : '' }}">👤 Mon Profil</a></li>
-                    <li><a href="{{ url('/settings') }}" class="{{ Request::is('settings') ? 'active' : '' }}">⚙️ Paramètres</a></li>
-                </ul>
-            </nav>
-            <div class="user-info" style="margin-top: auto; padding-top: 20px; font-size: 0.9rem; opacity: 0.8;">
-                <p>Connecté en tant que :</p>
-                <strong>{{ auth()->user()->name ?? 'Ilan Rubaud' }}</strong>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            @if(session('success'))
-                <div class="alert alert-success" style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
-                    {{ session('success') }}
-                </div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            Gestion-Tickets
+        </div>
+        
+        <nav style="flex: 1; margin-top: 20px;">
+            <a href="{{ url('/dashboard') }}" class="nav-link">📊 Tableau de bord</a>
+            
+            @if(Auth::user()->isAdmin())
+                <a href="{{ url('/clients') }}" class="nav-link">🏢 Clients</a>
             @endif
 
-            @yield('content')
-        </main>
+            <a href="{{ url('/projects') }}" class="nav-link">📁 Projets</a>
+            <a href="{{ url('/tickets') }}" class="nav-link">🎫 Tickets</a>
+        </nav>
+
+        <div class="user-info">
+            <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Connecté en tant que :</div>
+            
+            <div style="font-weight: bold; font-size: 1.1rem; color: white;">
+                {{ Auth::user()->name }}
+            </div>
+            
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="logout-btn">Se déconnecter</button>
+            </form>
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ asset('js/app.js') }}"></script>
+    <div class="main-content">
+        @yield('content')
+    </div>
+
 </body>
 </html>

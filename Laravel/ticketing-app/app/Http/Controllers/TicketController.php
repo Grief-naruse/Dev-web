@@ -40,8 +40,7 @@ class TicketController extends Controller
     {
         Ticket::create($request->validated());
 
-        return redirect()->route('dashboard') // On changera vers tickets.index quand la vue existera
-            ->with('success', 'Le ticket a été créé et rattaché au projet.');
+        return redirect('/tickets')->with('success', 'Le ticket a été créé.');
     }
 
     /**
@@ -75,8 +74,7 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
         $ticket->update($request->validated());
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Le ticket a été mis à jour.');
+        return redirect('/tickets')->with('success', 'Le ticket a été mis à jour.');
     }
 
     /**
@@ -87,7 +85,6 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
         $ticket->delete();
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Le ticket a été supprimé.');
+        return redirect('/tickets')->with('success', 'Le ticket a été supprimé.');
     }
 }

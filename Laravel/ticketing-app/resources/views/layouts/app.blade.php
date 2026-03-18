@@ -4,119 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion-Tickets ERP</title>
-    
-    <style>
-        body { 
-            margin: 0; 
-            font-family: system-ui, -apple-system, sans-serif; 
-            background-color: #f4f6f9; 
-            display: flex; 
-            min-height: 100vh; 
-        }
-        
-        /* La fameuse barre latérale sombre */
-        .sidebar { 
-            width: 250px; 
-            background-color: #2c3e50; 
-            color: white; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            z-index: 10;
-        }
-        
-        .sidebar-header { 
-            padding: 20px; 
-            font-size: 1.5rem; 
-            font-weight: bold; 
-            border-bottom: 1px solid #34495e; 
-            text-align: center;
-        }
-        
-        .nav-link { 
-            display: block; 
-            padding: 15px 25px; 
-            color: #bdc3c7; 
-            text-decoration: none; 
-            font-weight: bold;
-            transition: all 0.2s; 
-            border-left: 4px solid transparent;
-        }
-        
-        .nav-link:hover { 
-            background-color: #34495e; 
-            color: white; 
-            border-left: 4px solid #3498db;
-        }
-        
-        /* Conteneur de la page de droite */
-        .main-content { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px;
-        }
-        
-        /* Le bloc en bas à gauche pour l'utilisateur connecté */
-        .user-info { 
-            margin-top: auto; 
-            padding: 20px; 
-            background-color: #1a252f; 
-        }
-        
-        .logout-btn { 
-            background-color: transparent; 
-            border: 1px solid #e74c3c; 
-            color: #e74c3c; 
-            cursor: pointer; 
-            padding: 8px 15px; 
-            font-weight: bold; 
-            border-radius: 4px;
-            width: 100%;
-            transition: 0.2s;
-            margin-top: 15px;
-        }
-        
-        .logout-btn:hover {
-            background-color: #e74c3c;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            Gestion-Tickets
-        </div>
+    <div class="app-layout">
         
-        <nav style="flex: 1; margin-top: 20px;">
-            <a href="{{ url('/dashboard') }}" class="nav-link">📊 Tableau de bord</a>
+        <aside class="sidebar">
+            <h2 style="padding-bottom: 20px; border-bottom: 1px solid #34495e; text-align: center; margin-bottom: 0;">ERP</h2>
             
-            @if(Auth::user()->isAdmin())
-                <a href="{{ url('/clients') }}" class="nav-link">🏢 Clients</a>
-            @endif
+            <nav style="flex: 1;">
+                <ul>
+                    <li><a href="{{ url('/dashboard') }}">📊 Tableau de bord</a></li>
+                    
+                    @if(Auth::user()->isAdmin())
+                        <li><a href="{{ url('/clients') }}">🏢 Clients</a></li>
+                    @endif
 
-            <a href="{{ url('/projects') }}" class="nav-link">📁 Projets</a>
-            <a href="{{ url('/tickets') }}" class="nav-link">🎫 Tickets</a>
-        </nav>
+                    <li><a href="{{ url('/projects') }}">📁 Projets</a></li>
+                    <li><a href="{{ url('/tickets') }}">🎫 Tickets</a></li>
+                    
+                    <li style="margin-top: 20px; border-top: 1px solid #34495e; padding-top: 10px;">
+                        <a href="{{ url('/profile') }}">👤 Mon Profil</a>
+                    </li>
+                    
+                    <li>
+                        <a href="{{ route('settings.index') }}">⚙️ Paramètres</a>
+                    </li>
+                </ul>
+            </nav>
 
-        <div class="user-info">
-            <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Connecté en tant que :</div>
-            
-            <div style="font-weight: bold; font-size: 1.1rem; color: white;">
-                {{ Auth::user()->name }}
+            <div style="background-color: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1); border: 2px solid #ecf0f1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; overflow: hidden;">
+                        @if(Auth::user()->avatar)
+                            <img src="{{ Auth::user()->avatarUrl() }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                        @else
+                            <span style="color: #bdc3c7;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                        @endif
+                    </div>
+                    <div>
+                        <div style="font-size: 0.8rem; color: #bdc3c7;">Connecté(e) :</div>
+                        <div style="font-weight: bold; color: white;">{{ Auth::user()->name }}</div>
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-danger" style="width: 100%; padding: 8px; font-size: 0.85rem;">🗑️ Déconnexion</button>
+                </form>
             </div>
-            
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-btn">Se déconnecter</button>
-            </form>
-        </div>
+        </aside>
+
+        <main class="main-content">
+            @yield('content')
+        </main>
+        
     </div>
 
-    <div class="main-content">
-        @yield('content')
-    </div>
+    <script>
+        const body = document.body;
 
+        // 1. Applique le thème globalement sur TOUTES les pages
+        if (localStorage.getItem('dark-mode') === 'enabled') {
+            body.classList.add('dark-mode');
+        }
+
+        // 2. Gère le bouton UNIQUEMENT s'il est présent sur la page (page paramètres)
+        const toggle = document.getElementById('darkModeToggle');
+        if (toggle) {
+            // Met le bouton dans le bon état au chargement
+            if (localStorage.getItem('dark-mode') === 'enabled') {
+                toggle.checked = true;
+            }
+
+            // Écoute les clics
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    body.classList.add('dark-mode');
+                    localStorage.setItem('dark-mode', 'enabled');
+                } else {
+                    body.classList.remove('dark-mode');
+                    localStorage.setItem('dark-mode', 'disabled');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

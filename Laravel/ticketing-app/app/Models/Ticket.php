@@ -74,4 +74,12 @@ class Ticket extends Model
     {
         return in_array($this->priority, ['high', 'urgent']);
     }
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TicketComment::class);
+    }
+    public function assignees()
+    {
+        return $this->belongsToMany(User::class, 'ticket_user');
+    }
 }

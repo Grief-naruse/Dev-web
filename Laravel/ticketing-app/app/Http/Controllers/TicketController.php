@@ -4,21 +4,51 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\Project;
+use App\Models\User;
 use App\Http\Requests\StoreTicketRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class TicketController extends Controller
 {
     /**
      * Liste tous les tickets.
      */
-    public function index(): View
+    public function index()
     {
-        // Eager Loading : On charge le projet lié au ticket pour éviter le problème "N+1 queries"
-        // latest() permet d'afficher les tickets les plus récents en premier
-        $tickets = Ticket::with('project')->latest()->get();
-        
+        $user = Auth::user();
+
+        // 1. Optimisation Enterprise : On précharge les relations (Eager Loading)
+        // Cela évite de faire une requête SQL supplémentaire pour chaque ticket affiché.
+        $query = Ticket::with(['project.client', 'author', 'assignee']);
+
+        // 2. Le Filtre Métier (Data Scoping)
+        if ($user->isAdmin()) {
+            // 👑 L'Admin voit absolument tous les tickets de l'ERP.
+            // On ne filtre rien.
+            
+        } elseif ($user->isClient()) {
+            // 🏢 Le Client ne voit QUE les tickets des projets appartenant à SON entreprise.
+            $query->whereHas('project', function ($q) use ($user) {
+                $q->where('client_id', $user->client_id);
+            });
+            
+        } elseif ($user->isCollaborator()) {
+            // 🧑‍💻 Le Collaborateur voit les tickets des projets sur lesquels l'Admin l'a assigné.
+            // (Nécessite la table pivot project_user)
+            $query->whereHas('project.users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })
+            // OU il voit les tickets qui lui sont directement assignés
+            ->orWhere('assigned_to', $user->id);
+        }
+
+        // 3. On exécute la requête en triant par date de mise à jour récente
+        $tickets = $query->latest('updated_at')->paginate(15);
+
         return view('tickets.index', compact('tickets'));
     }
 
@@ -27,8 +57,11 @@ class TicketController extends Controller
      */
     public function create(): View
     {
-        // On a besoin de la liste des projets actifs pour le menu déroulant
-        $projects = Project::select('id', 'name')->where('status', '!=', 'completed')->orderBy('name')->get();
+        // FIX : On précharge la relation 'client' pour éviter l'erreur sur la vue
+        $projects = Project::with('client')
+            ->where('status', '!=', 'completed')
+            ->orderBy('name')
+            ->get();
         
         return view('tickets.create', compact('projects'));
     }
@@ -40,51 +73,98 @@ class TicketController extends Controller
     {
         Ticket::create($request->validated());
 
-        return redirect('/tickets')->with('success', 'Le ticket a été créé.');
+        return redirect('/tickets')->with('success', 'Le ticket a été créé avec succès.');
     }
 
     /**
      * Affiche les détails d'un ticket.
      */
-    public function show(int $id): View
+    public function show(Ticket $ticket)
     {
-        $ticket = Ticket::with('project')->findOrFail($id);
-        
+        Gate::authorize('view', $ticket);
+
+        // On ajoute "comments.user" à la liste des relations à charger !
+        $ticket->load(['project.client', 'timeEntries.user', 'comments.user']);
+
         return view('tickets.show', compact('ticket'));
     }
 
     /**
      * Affiche le formulaire de modification.
      */
-    public function edit(int $id): View
+    public function edit(Ticket $ticket)
     {
-        $ticket = Ticket::findOrFail($id);
-        
-        // On récupère les projets pour pouvoir potentiellement déplacer le ticket
-        $projects = Project::select('id', 'name')->orderBy('name')->get();
-        
-        return view('tickets.edit', compact('ticket', 'projects'));
+        Gate::authorize('update', $ticket);
+
+        // 1. On charge les projets pour le premier menu déroulant
+        $projects = Project::with('client')->where('status', '!=', 'completed')->get();
+
+        // 2. On charge UNIQUEMENT les membres de l'équipe (pas les clients) pour l'assignation
+        $users = User::whereIn('role', ['admin', 'collaborator'])->orderBy('name')->get();
+
+        return view('tickets.edit', compact('ticket', 'projects', 'users'));
     }
 
     /**
      * Met à jour le ticket.
      */
-    public function update(StoreTicketRequest $request, int $id): RedirectResponse
+    public function update(Request $request, Ticket $ticket)
     {
-        $ticket = Ticket::findOrFail($id);
-        $ticket->update($request->validated());
+        Gate::authorize('update', $ticket);
 
-        return redirect('/tickets')->with('success', 'Le ticket a été mis à jour.');
+        $validated = $request->validate([
+            'project_id'      => 'required|exists:projects,id',
+            'title'           => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'status'          => 'required|in:todo,in_progress,in_review,completed',
+            'priority'        => 'required|in:low,medium,high,urgent',
+            'type'            => 'required|in:included,billable',
+            'estimated_hours' => 'nullable|numeric|min:0',
+            // 👈 On attend désormais un TABLEAU d'identifiants
+            'assignees'       => 'nullable|array', 
+            'assignees.*'     => 'exists:users,id', // Chaque ID du tableau doit exister
+        ]);
+
+        // On met à jour les informations de base du ticket
+        $ticket->update($validated);
+
+        // 🔥 LA MAGIE DU MANY-TO-MANY : On synchronise la table pivot !
+        if (isset($validated['assignees'])) {
+            $ticket->assignees()->sync($validated['assignees']);
+        } else {
+            $ticket->assignees()->sync([]); // Si on a tout décoché, on vide la table pivot
+        }
+
+        return redirect()->route('tickets.show', $ticket)->with('success', 'Le ticket a été mis à jour avec succès.');
     }
 
     /**
      * Supprime le ticket.
      */
-    public function destroy(int $id): RedirectResponse
+    public function destroy(Ticket $ticket): RedirectResponse
     {
-        $ticket = Ticket::findOrFail($id);
+        // Sécurité Enterprise Ready : On vérifie que la personne a le droit de supprimer
+        Gate::authorize('delete', $ticket); 
+        
         $ticket->delete();
 
         return redirect('/tickets')->with('success', 'Le ticket a été supprimé.');
+    }
+    /**
+     * 🤖 AJAX : Retourne l'équipe d'un projet au format JSON.
+     */
+    public function getProjectTeam(Project $project)
+    {
+        // 1. On récupère tous les admins
+        $admins = User::where('role', 'admin')->get();
+
+        // 2. On récupère les collaborateurs assignés à ce projet
+        // (Vérifie que la relation s'appelle bien 'users' dans ton modèle Project, sinon adapte)
+        $collaborators = $project->users()->where('role', 'collaborator')->get();
+
+        // 3. On fusionne, on enlève les doublons potentiels, et on renvoie au format JSON
+        $team = $admins->merge($collaborators)->unique('id')->values();
+
+        return response()->json($team);
     }
 }

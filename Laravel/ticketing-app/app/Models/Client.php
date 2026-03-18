@@ -19,4 +19,11 @@ class Client extends Model
     {
         return $this->hasMany(Project::class);
     }
+    /**
+     * Les comptes utilisateurs rattachés à cette entreprise.
+     */
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

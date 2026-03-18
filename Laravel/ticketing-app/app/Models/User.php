@@ -12,41 +12,48 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
-        'name', 'email', 'password', 'role',
+        'name', 'email', 'password', 'role','client_id', 'avatar' // <-- AJOUT d'avatar ICI
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     */
     protected $hidden = [
         'password', 'remember_token',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     // --- RELATIONS ---
 
-    /**
-     * Projets sur lesquels ce collaborateur travaille.
-     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class);
     }
 
-    /**
-     * Tickets assignés à cet utilisateur (en tant que responsable).
-     */
-    public function assignedTickets(): HasMany
+    public function assignedTickets()
     {
-        return $this->hasMany(Ticket::class, 'assigned_to');
+        return $this->belongsToMany(Ticket::class, 'ticket_user');
     }
-
-    /**
-     * Temps total saisi par cet utilisateur sur l'ensemble du système.
-     */
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
     }
 
-    // --- LOGIQUE MÉTIER (Helpers) ---
+    // --- LOGIQUE MÉTIER & HELPERS ---
 
     public function isAdmin(): bool
     {
@@ -62,4 +69,24 @@ class User extends Authenticatable
     {
         return $this->role === 'client';
     }
+
+    /**
+     * ✨ NOUVEAU HELPER ENTERPRISE : Génère l'URL de l'avatar ou renvoie null
+     */
+    public function avatarUrl()
+    {
+        if ($this->avatar) {
+            // Laravel sert les fichiers publics via le disk 'public' qu'on verra après
+            return asset('storage/avatars/' . $this->avatar);
+        }
+        return null; // Pas d'avatar, on gérera le placeholder dans la vue
+    }
+    /**
+     * L'entreprise (Client) à laquelle cet utilisateur appartient.
+     */
+    public function clientEnterprise()
+    {
+        return $this->belongsTo(Client::class, 'client_id');
+    }
+    
 }

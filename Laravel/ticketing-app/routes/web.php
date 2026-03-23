@@ -8,11 +8,6 @@ use App\Http\Controllers\TimeEntryController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
-// Modèles pour le Dashboard
-use App\Models\Project;
-use App\Models\Ticket;
-use App\Models\TimeEntry;
-
 // 🛡️ Import de notre Middleware de rôles
 use App\Http\Middleware\CheckRole;
 
@@ -25,21 +20,10 @@ Route::get('/', function () {
 });
 
 // 📊 Le Dashboard Dynamique
-Route::get('/dashboard', function () {
-    $stats = [
-        'total_projects'  => Project::count(),
-        'active_tickets'  => Ticket::where('status', '!=', 'completed')->count(),
-        'pending_hours'   => TimeEntry::sum('duration') ?? 0, 
-        'completed_tasks' => Ticket::where('status', 'completed')->count(),
-    ];
-
-    $recentActivities = Ticket::with('project')
-                            ->latest('updated_at')
-                            ->take(5)
-                            ->get();
-
-    return view('dashboard', compact('stats', 'recentActivities'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+// 📊 Le Dashboard Dynamique (Architecture Pro via Controller)
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // -----------------------------------------------------------------------
 // 🔒 ZONE SÉCURISÉE GLOBALE (Accès partagé selon les règles métier)

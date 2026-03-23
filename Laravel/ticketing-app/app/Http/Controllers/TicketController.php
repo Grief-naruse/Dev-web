@@ -69,11 +69,30 @@ class TicketController extends Controller
     /**
      * Enregistre le ticket dans la base.
      */
-    public function store(StoreTicketRequest $request): RedirectResponse
+    /**
+     * Enregistre le ticket dans la base.
+     */
+    public function store(Request $request): RedirectResponse
     {
-        Ticket::create($request->validated());
+        // 1. Validation stricte des données reçues du formulaire
+        $validated = $request->validate([
+            'project_id'      => 'required|exists:projects,id',
+            'title'           => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'priority'        => 'required|in:low,medium,high,urgent',
+            'type'            => 'required|in:included,billable',
+            'estimated_hours' => 'nullable|numeric|min:0',
+        ]);
 
-        return redirect('/tickets')->with('success', 'Le ticket a été créé avec succès.');
+        // 2. On ajoute les données systèmes obligatoires
+        $validated['author_id'] = Auth::id(); // L'auteur est celui qui est connecté
+        $validated['status']    = 'todo';     // Un nouveau ticket est toujours "À faire"
+
+        // 3. Création Enterprise Ready
+        Ticket::create($validated);
+
+        // 4. Redirection avec confirmation
+        return redirect()->route('tickets.index')->with('success', 'Le ticket a été créé avec succès.');
     }
 
     /**

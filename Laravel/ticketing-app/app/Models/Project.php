@@ -65,4 +65,26 @@ class Project extends Model
     {
         return $this->included_hours - $this->total_spent_hours;
     }
+
+    // --- DESIGN SYSTEM (Accessors pour l'UI) ---
+
+    /**
+     * Génère le badge HTML du Statut du Projet
+     */
+    /**
+     * Génère le badge HTML du Statut du Projet
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $config = [
+            'active'    => ['label' => 'En cours', 'bg' => '#e8f8f5', 'text' => '#27ae60'],
+            'on_hold'   => ['label' => 'En attente', 'bg' => '#fef9e7', 'text' => '#f39c12'],
+            'completed' => ['label' => 'Terminé',  'bg' => '#f4f6f6', 'text' => '#7f8c8d']
+        ];
+
+        $current = $config[$this->status] ?? ['label' => ucfirst($this->status), 'bg' => '#f4f6f6', 'text' => '#7f8c8d'];
+
+        // ✨ Ajout de display: inline-block; et white-space: nowrap;
+        return "<span style='display: inline-block; white-space: nowrap; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: {$current['text']}; background-color: {$current['bg']};'>{$current['label']}</span>";
+    }
 }

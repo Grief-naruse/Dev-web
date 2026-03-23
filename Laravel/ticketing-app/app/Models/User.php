@@ -16,14 +16,20 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'name', 'email', 'password', 'role','client_id', 'avatar' // <-- AJOUT d'avatar ICI
+        'name',
+        'email',
+        'password',
+        'role',
+        'client_id',
+        'avatar' // <-- AJOUT d'avatar ICI
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     /**
@@ -88,5 +94,16 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Client::class, 'client_id');
     }
-    
+
+    public function getAvatarUrl()
+    {
+        if ($this->avatar) {
+            return asset('storage/avatars/' . $this->avatar);
+        }
+
+        // Si pas d'avatar, on peut utiliser un service comme UI Avatars 
+        // ou simplement renvoyer null pour gérer l'initiale en CSS
+        return null;
+    }
+
 }

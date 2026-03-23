@@ -28,6 +28,7 @@
                 <tr>
                     <th style="padding: 15px;">Nom du Projet</th>
                     <th style="padding: 15px;">Client Facturé</th>
+                    <th style="padding: 15px;">Équipe</th>
                     <th style="padding: 15px;">Statut</th>
                     <th style="padding: 15px;">Activité</th>
                     <th style="padding: 15px; text-align: right;">Actions</th>
@@ -35,10 +36,12 @@
             </thead>
             <tbody>
                 @forelse($projects as $project)
-                <tr style="border-bottom: 1px solid #ecf0f1; transition: background-color 0.2s;">
+                <tr style="border-bottom: 1px solid #ecf0f1; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9f9f9';" onmouseout="this.style.backgroundColor='transparent';">
+                    
                     <td style="padding: 15px; font-weight: bold; color: #2c3e50; font-size: 1.1rem;">
                         {{ $project->name }}
                     </td>
+                    
                     <td style="padding: 15px; color: #7f8c8d;">
                         @if($project->client)
                             🏢 <a href="{{ route('clients.show', $project->client) }}" style="color: #34495e; text-decoration: none; font-weight: bold;">{{ $project->client->name }}</a>
@@ -46,18 +49,37 @@
                             <span style="color: #e74c3c; font-weight: bold;">⚠️ Client introuvable</span>
                         @endif
                     </td>
+
                     <td style="padding: 15px;">
-                        @if($project->status === 'active')
-                            <span style="background-color: #e8f8f5; color: #27ae60; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">En cours</span>
-                        @elseif($project->status === 'on_hold')
-                            <span style="background-color: #fef9e7; color: #f39c12; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">En attente</span>
-                        @else
-                            <span style="background-color: #f4f6f6; color: #7f8c8d; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">Terminé</span>
-                        @endif
+                        <div style="display: flex; align-items: center;">
+                            @forelse($project->users->take(3) as $user)
+                                <div title="{{ $user->name }}" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; margin-left: -10px; overflow: hidden; background: #2c3e50; display: flex; align-items: center; justify-content: center; position: relative;">
+                                    @if($user->avatar)
+                                        <img src="{{ asset('storage/avatars/' . $user->avatar) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                                    @else
+                                        <span style="color: white; font-size: 0.65rem; font-weight: bold;">{{ substr($user->name, 0, 1) }}</span>
+                                    @endif
+                                </div>
+                            @empty
+                                <span style="color: #e74c3c; font-size: 0.85rem; font-style: italic;">Aucune équipe</span>
+                            @endforelse
+
+                            @if($project->users->count() > 3)
+                                <div style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; margin-left: -10px; background: #edf2f7; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; color: #2c3e50; z-index: 1;">
+                                    +{{ $project->users->count() - 3 }}
+                                </div>
+                            @endif
+                        </div>
                     </td>
+
+                    <td style="padding: 15px;">
+                        {!! $project->status_badge !!}
+                    </td>
+                    
                     <td style="padding: 15px; color: #7f8c8d; font-weight: bold;">
-                        🎫 {{ $project->tickets_count }} ticket(s)
+                        🎫 {{ $project->tickets_count ?? $project->tickets->count() }} ticket(s)
                     </td>
+                    
                     <td style="padding: 15px; text-align: right;">
                         <a href="{{ url('/projects/' . $project->id) }}" style="color: #3498db; text-decoration: none; margin-right: 15px; font-weight: bold;">Détails</a>
                         <a href="{{ url('/projects/' . $project->id . '/edit') }}" style="color: #f39c12; text-decoration: none; margin-right: 15px; font-weight: bold;">Modifier</a>
@@ -71,7 +93,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" style="padding: 30px; text-align: center; color: #7f8c8d; font-size: 1.1rem;">
+                    <td colspan="6" style="padding: 30px; text-align: center; color: #7f8c8d; font-size: 1.1rem;">
                         Aucun projet n'est enregistré pour le moment. Cliquez sur "+ Nouveau Projet" pour commencer !
                     </td>
                 </tr>

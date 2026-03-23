@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Client;
+use App\Models\User; // 👈 AJOUT : On importe le modèle User
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,7 +45,10 @@ class ProjectController extends Controller
         }
 
         $clients = Client::all();
-        return view('projects.create', compact('clients'));
+        // 👈 AJOUT : On récupère l'équipe (pas les clients)
+        $users = User::whereIn('role', ['admin', 'collaborator'])->orderBy('name')->get(); 
+        
+        return view('projects.create', compact('clients', 'users'));
     }
 
     /**
@@ -60,11 +64,18 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'client_id' => 'required|exists:clients,id',
-            'status' => 'required|in:active,completed',
+            'status' => 'required|in:active,on_hold,completed', // Ajout de on_hold
             'included_hours' => 'required|numeric|min:0',
+            'users' => 'nullable|array', // 👈 AJOUT : Le tableau des membres cochés
+            'users.*' => 'exists:users,id',
         ]);
 
-        Project::create($validated);
+        $project = Project::create($validated);
+
+        // 👈 AJOUT : On attache les utilisateurs cochés au projet dans la table pivot
+        if (!empty($validated['users'])) {
+            $project->users()->attach($validated['users']);
+        }
 
         return redirect('/projects')->with('success', 'Le projet a été créé avec succès.');
     }
@@ -81,8 +92,6 @@ class ProjectController extends Controller
             abort(403, 'Vous n\'êtes pas affecté à ce projet.');
         }
 
-        // TODO: Ajouter la vérification pour le Client plus tard
-
         return view('projects.show', compact('project'));
     }
 
@@ -96,7 +105,10 @@ class ProjectController extends Controller
         }
 
         $clients = Client::all();
-        return view('projects.edit', compact('project', 'clients'));
+        // 👈 AJOUT : On récupère l'équipe
+        $users = User::whereIn('role', ['admin', 'collaborator'])->orderBy('name')->get();
+
+        return view('projects.edit', compact('project', 'clients', 'users'));
     }
 
     /**
@@ -112,11 +124,21 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'client_id' => 'required|exists:clients,id',
-            'status' => 'required|in:active,completed',
+            'status' => 'required|in:active,on_hold,completed',
             'included_hours' => 'required|numeric|min:0',
+            'users' => 'nullable|array', // 👈 AJOUT
+            'users.*' => 'exists:users,id',
         ]);
 
         $project->update($validated);
+
+        // 👈 AJOUT : On synchronise la table pivot. 
+        // Sync() est magique : il ajoute les nouveaux, garde les existants, et supprime ceux qui ont été décochés !
+        if (isset($validated['users'])) {
+            $project->users()->sync($validated['users']);
+        } else {
+            $project->users()->sync([]); // Si tout est décoché, on vide
+        }
 
         return redirect('/projects')->with('success', 'Le projet a bien été mis à jour.');
     }

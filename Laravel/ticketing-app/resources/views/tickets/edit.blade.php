@@ -23,8 +23,7 @@
 
                 <div style="margin-bottom: 20px;">
                     <label for="project_id"
-                        style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Projet rattaché
-                        *</label>
+                        style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Projet rattaché *</label>
                     <select name="project_id" id="project_id"
                         style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px; background-color: #f9f9f9;"
                         required>
@@ -34,239 +33,246 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('project_id') <span
-                        style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                    @enderror
+                    @error('project_id') <span style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span> @enderror
                 </div>
 
                 <div style="margin-bottom: 20px;">
-                    <label for="title" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Titre
-                        du ticket *</label>
+                    <label for="title" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Titre du ticket *</label>
                     <input type="text" name="title" id="title"
                         style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;"
                         value="{{ old('title', $ticket->title) }}" required>
-                    @error('title') <span
-                        style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                    @enderror
+                    @error('title') <span style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span> @enderror
                 </div>
 
                 <div style="margin-bottom: 20px;">
-                    <label for="description"
-                        style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Description
-                        détaillée</label>
+                    <label for="description" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Description détaillée</label>
                     <textarea name="description" id="description"
                         style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;"
                         rows="5">{{ old('description', $ticket->description) }}</textarea>
-                    @error('description') <span
-                        style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                    @enderror
+                    @error('description') <span style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span> @enderror
                 </div>
 
                 <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
-
-                    <div style="flex: 1; min-width: 250px;" id="assignees-wrapper">
-                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Équipe
-                            assignée</label>
-
-                        <div style="position: relative;">
-                            <button type="button" id="toggle-assignees"
-                                style="width: 100%; padding: 10px 15px; border: 1px solid #bdc3c7; border-radius: 4px; background: #fff; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #2c3e50;">
-                                <span id="assignees-button-text">Sélectionner l'équipe...</span>
-                                <span style="font-size: 0.8rem; color: #7f8c8d;">▼</span>
-                            </button>
-
-                            <div id="assignees-dropdown"
-                                style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #bdc3c7; border-top: none; border-radius: 0 0 4px 4px; z-index: 100; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
-                                <div id="assignees-list"
-                                    style="padding: 15px; display: flex; flex-direction: column; gap: 12px;">
-                                    <span style="color: #7f8c8d; font-style: italic; font-size: 0.9rem;">Sélectionnez
-                                        d'abord un projet...</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        @error('assignees') <span
-                            style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                        @enderror
-                    </div>
-
                     <div style="flex: 1; min-width: 200px;">
-                        <label for="status"
-                            style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Statut *</label>
-                        <select name="status" id="status"
-                            style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
-                            <option value="todo" {{ old('status', $ticket->status) == 'todo' ? 'selected' : '' }}>À faire
-                            </option>
+                        <label for="status" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Statut *</label>
+                        <select name="status" id="status" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
+                            <option value="todo" {{ old('status', $ticket->status) == 'todo' ? 'selected' : '' }}>À faire</option>
                             <option value="in_progress" {{ old('status', $ticket->status) == 'in_progress' ? 'selected' : '' }}>En cours</option>
-                            <option value="in_review" {{ old('status', $ticket->status) == 'in_review' ? 'selected' : '' }}>En
-                                revue</option>
-                            <option value="completed" {{ old('status', $ticket->status) == 'completed' ? 'selected' : '' }}>
-                                Terminé</option>
+                            <option value="in_review" {{ old('status', $ticket->status) == 'in_review' ? 'selected' : '' }}>En revue</option>
+                            <option value="completed" {{ old('status', $ticket->status) == 'completed' ? 'selected' : '' }}>Terminé</option>
                         </select>
-                        @error('status') <span
-                            style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <div style="flex: 1; min-width: 200px;">
-                        <label for="priority"
-                            style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Niveau d'urgence
-                            *</label>
-                        <select name="priority" id="priority"
-                            style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
-                            <option value="low" {{ old('priority', $ticket->priority) == 'low' ? 'selected' : '' }}>🟢 Basse
-                            </option>
-                            <option value="medium" {{ old('priority', $ticket->priority) == 'medium' ? 'selected' : '' }}>🟡
-                                Normale</option>
-                            <option value="high" {{ old('priority', $ticket->priority) == 'high' ? 'selected' : '' }}>🟠 Haute
-                            </option>
-                            <option value="urgent" {{ old('priority', $ticket->priority) == 'urgent' ? 'selected' : '' }}>🔴
-                                Urgente</option>
+                        <label for="priority" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Niveau d'urgence *</label>
+                        <select name="priority" id="priority" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
+                            <option value="low" {{ old('priority', $ticket->priority) == 'low' ? 'selected' : '' }}>🟢 Basse</option>
+                            <option value="medium" {{ old('priority', $ticket->priority) == 'medium' ? 'selected' : '' }}>🟡 Normale</option>
+                            <option value="high" {{ old('priority', $ticket->priority) == 'high' ? 'selected' : '' }}>🟠 Haute</option>
+                            <option value="urgent" {{ old('priority', $ticket->priority) == 'urgent' ? 'selected' : '' }}>🔴 Urgente</option>
                         </select>
-                        @error('priority') <span
-                            style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <div style="flex: 1; min-width: 200px;">
-                        <label for="type"
-                            style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Type de
-                            facturation *</label>
-                        <select name="type" id="type"
-                            style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
-                            <option value="included" {{ old('type', $ticket->type) == 'included' ? 'selected' : '' }}>📦
-                                Inclus dans le forfait</option>
-                            <option value="billable" {{ old('type', $ticket->type) == 'billable' ? 'selected' : '' }}>💸
-                                Hors-forfait (Facturable)</option>
+                        <label for="type" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Type de facturation *</label>
+                        <select name="type" id="type" style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;">
+                            <option value="included" {{ old('type', $ticket->type) == 'included' ? 'selected' : '' }}>📦 Inclus dans le forfait</option>
+                            <option value="billable" {{ old('type', $ticket->type) == 'billable' ? 'selected' : '' }}>💸 Hors-forfait</option>
                         </select>
-                        @error('type') <span
-                            style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span>
-                        @enderror
                     </div>
                 </div>
 
+                <div style="margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <label style="font-weight: bold; color: #34495e; margin: 0;">Équipe assignée</label>
+                        <button type="button" onclick="openTeamModal()" style="background: #edf2f7; color: #2c3e50; border: 1px solid #cbd5e0; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s;">
+                            🔍 Gérer l'équipe
+                        </button>
+                    </div>
+                    
+                    <div id="selected-team-display" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 40px; padding: 10px; border: 1px dashed #bdc3c7; border-radius: 6px; background: #fafafa;">
+                        <span style="color: #95a5a6; font-size: 0.9rem; font-style: italic; margin: auto 0;">Chargement de l'équipe...</span>
+                    </div>
+                    @error('assignees') <span style="color: #e74c3c; font-size: 0.85rem; margin-top: 5px; display: block;">{{ $message }}</span> @enderror
+                </div>
+
                 <div style="margin-bottom: 30px; max-width: 200px;">
-                    <label for="estimated_hours"
-                        style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Estimation
-                        (Heures)</label>
+                    <label for="estimated_hours" style="display: block; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Estimation (Heures)</label>
                     <input type="number" step="0.5" min="0" name="estimated_hours" id="estimated_hours"
                         style="width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px;"
                         value="{{ old('estimated_hours', $ticket->estimated_hours) }}">
                 </div>
 
                 <div style="text-align: right; border-top: 1px solid #ecf0f1; padding-top: 20px;">
-                    <button type="submit"
-                        style="background-color: #f39c12; color: white; padding: 12px 30px; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer;">
+                    <button type="submit" style="background-color: #f39c12; color: white; padding: 12px 30px; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer;">
                         Enregistrer les modifications
                     </button>
                 </div>
+
+                <div id="teamModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+                    <div style="background: white; width: 90%; max-width: 500px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 80vh; overflow: hidden;">
+                        
+                        <div style="padding: 20px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                            <h3 style="margin: 0; color: #2c3e50; font-size: 1.1rem;">Assigner au ticket</h3>
+                            <button type="button" onclick="closeTeamModal()" style="background: none; border: none; font-size: 1.5rem; color: #7f8c8d; cursor: pointer; line-height: 1;">&times;</button>
+                        </div>
+
+                        <div style="padding: 15px 20px; border-bottom: 1px solid #edf2f7;">
+                            <input type="text" id="teamSearchInput" onkeyup="filterTeam()" placeholder="Rechercher par nom..." style="width: 100%; padding: 10px 15px; border: 1px solid #cbd5e0; border-radius: 20px; font-size: 0.95rem; outline: none;">
+                        </div>
+
+                        <div id="teamListContainer" style="overflow-y: auto; flex: 1; padding: 10px 20px;">
+                            </div>
+                        <div id="noResultsMsg" style="display: none; text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Aucun collaborateur trouvé.</div>
+
+                        <div style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid #edf2f7; text-align: right;">
+                            <button type="button" onclick="closeTeamModal()" style="background: #3498db; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">Valider la sélection</button>
+                        </div>
+                    </div>
+                </div>
+
             </form>
         </div>
     </div>
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
         const projectSelect = document.getElementById('project_id');
-        const assigneesList = document.getElementById('assignees-list');
-        const toggleButton = document.getElementById('toggle-assignees');
-        const dropdown = document.getElementById('assignees-dropdown');
-        const buttonText = document.getElementById('assignees-button-text');
+        const teamListContainer = document.getElementById('teamListContainer');
+        const displayArea = document.getElementById('selected-team-display');
+        const modal = document.getElementById('teamModal');
         
-        // Les identifiants de l'équipe actuellement assignée (fournis par Laravel)
+        // Identifiants cochés par défaut
         const currentAssignees = @json($ticket->assignees->pluck('id'));
 
-        // 1. GESTION DE L'AFFICHAGE (Ouvrir/Fermer la liste)
-        toggleButton.addEventListener('click', function() {
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-        });
+        function openTeamModal() {
+            modal.style.display = 'flex';
+            document.getElementById('teamSearchInput').focus();
+        }
+        
+        function closeTeamModal() {
+            modal.style.display = 'none';
+        }
 
-        // Fermer la liste si on clique ailleurs sur la page
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('#assignees-wrapper')) {
-                dropdown.style.display = 'none';
-            }
-        });
+        function filterTeam() {
+            let input = document.getElementById('teamSearchInput').value.toLowerCase();
+            let items = document.querySelectorAll('.team-member-item');
+            let visibleCount = 0;
 
-        // 2. METTRE À JOUR LE TEXTE DU BOUTON
-        function updateButtonText() {
-            const checkedBoxes = document.querySelectorAll('.assignee-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                buttonText.textContent = "Aucune personne assignée";
-                buttonText.style.color = "#7f8c8d";
-            } else if (checkedBoxes.length === 1) {
-                // S'il n'y a qu'une personne, on affiche son nom
-                buttonText.textContent = "👤 " + checkedBoxes[0].dataset.name;
-                buttonText.style.color = "#2c3e50";
-                buttonText.style.fontWeight = "bold";
-            } else {
-                buttonText.textContent = `👥 ${checkedBoxes.length} personnes sélectionnées`;
-                buttonText.style.color = "#3498db";
-                buttonText.style.fontWeight = "bold";
+            items.forEach(item => {
+                let name = item.querySelector('.member-name').innerText.toLowerCase();
+                if (name.includes(input)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            document.getElementById('noResultsMsg').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // Mettre à jour l'UI des bulles
+        function updateSelectedTeamUI() {
+            displayArea.innerHTML = '';
+            let hasSelection = false;
+            
+            // On cherche toutes les checkboxes qui ont été créées dans la modale
+            const checkboxes = document.querySelectorAll('.team-member-item input[type="checkbox"]');
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    hasSelection = true;
+                    let name = cb.getAttribute('data-name');
+                    let avatar = cb.getAttribute('data-avatar');
+                    let initial = cb.getAttribute('data-initial');
+
+                    let badge = document.createElement('div');
+                    badge.style.cssText = 'display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #cbd5e0; padding: 4px 10px 4px 4px; border-radius: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);';
+                    
+                    let imgHtml = avatar 
+                        ? `<img src="${avatar}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">` 
+                        : `<div style="width: 24px; height: 24px; border-radius: 50%; background: #2c3e50; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold;">${initial}</div>`;
+
+                    badge.innerHTML = `${imgHtml}<span style="font-size: 0.85rem; font-weight: 600; color: #2c3e50;">${name}</span>`;
+                    displayArea.appendChild(badge);
+                }
+            });
+
+            if (!hasSelection) {
+                displayArea.innerHTML = '<span style="color: #95a5a6; font-size: 0.9rem; font-style: italic; margin: auto 0;">Aucun membre sélectionné</span>';
             }
         }
 
-        // 3. LA REQUÊTE AJAX POUR RÉCUPÉRER L'ÉQUIPE
+        // Requête AJAX pour charger les membres d'un projet
         function loadTeam(projectId) {
             if (!projectId) {
-                assigneesList.innerHTML = '<span style="color: #7f8c8d; font-style: italic; font-size: 0.9rem;">Sélectionnez d\'abord un projet...</span>';
-                updateButtonText();
+                teamListContainer.innerHTML = '';
+                displayArea.innerHTML = '<span style="color: #95a5a6; font-size: 0.9rem; font-style: italic; margin: auto 0;">Sélectionnez d\'abord un projet...</span>';
                 return;
             }
 
-            assigneesList.innerHTML = '<span style="color: #3498db; font-size: 0.9rem;">Chargement...</span>';
+            teamListContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #3498db;">Chargement de l\'équipe...</div>';
 
             fetch(`/api/projects/${projectId}/team`)
                 .then(response => response.json())
                 .then(users => {
-                    assigneesList.innerHTML = ''; // On vide la liste
+                    teamListContainer.innerHTML = ''; 
 
                     if(users.length === 0) {
-                        assigneesList.innerHTML = '<span style="color: #e74c3c; font-size: 0.9rem;">Aucun membre sur ce projet</span>';
-                        updateButtonText();
+                        teamListContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #e74c3c;">Aucun membre assigné au projet parent.</div>';
+                        updateSelectedTeamUI();
                         return;
                     }
 
-                    // On fabrique les cases à cocher pour chaque utilisateur
                     users.forEach(user => {
                         const isChecked = currentAssignees.includes(user.id) ? 'checked' : '';
-                        
-                        // Création du label cliquable
+                        const avatarSrc = user.avatar ? `/storage/avatars/${user.avatar}` : '';
+                        const initial = user.name.substring(0, 1);
+                        const roleLabel = user.role === 'admin' ? 'Manager' : 'Collaborateur';
+
+                        const avatarHtml = user.avatar
+                            ? `<img src="${avatarSrc}" style="width: 100%; height: 100%; object-fit: cover;">`
+                            : `<span style="color: white; font-size: 0.75rem; font-weight: bold;">${initial}</span>`;
+
                         const label = document.createElement('label');
-                        label.style.display = 'flex';
-                        label.style.alignItems = 'center';
-                        label.style.gap = '10px';
-                        label.style.cursor = 'pointer';
-                        label.style.fontSize = '0.95rem';
-                        label.style.color = '#34495e';
+                        label.className = 'team-member-item';
+                        label.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s;';
+                        label.onmouseover = function() { this.style.background = '#f8fafc'; };
+                        label.onmouseout = function() { this.style.background = 'transparent'; };
 
                         label.innerHTML = `
-                            <input type="checkbox" name="assignees[]" value="${user.id}" data-name="${user.name}" class="assignee-checkbox" ${isChecked} style="width: 16px; height: 16px; cursor: pointer;">
-                            👤 ${user.name}
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #2c3e50; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
+                                    ${avatarHtml}
+                                </div>
+                                <div>
+                                    <div style="color: #2c3e50; font-weight: bold; font-size: 0.95rem;" class="member-name">${user.name}</div>
+                                    <div style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">${roleLabel}</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" name="assignees[]" value="${user.id}" data-name="${user.name}" data-avatar="${avatarSrc}" data-initial="${initial}" onchange="updateSelectedTeamUI()" style="transform: scale(1.2); accent-color: #3498db;" ${isChecked}>
                         `;
-                        
-                        assigneesList.appendChild(label);
+
+                        teamListContainer.appendChild(label);
                     });
 
-                    // On ajoute un "écouteur" sur chaque case pour mettre à jour le bouton quand on clique
-                    document.querySelectorAll('.assignee-checkbox').forEach(cb => {
-                        cb.addEventListener('change', updateButtonText);
-                    });
-
-                    updateButtonText(); // Mise à jour initiale
+                    updateSelectedTeamUI(); // Dessine les bulles une fois la modale remplie
                 })
                 .catch(error => {
                     console.error('Erreur AJAX:', error);
-                    assigneesList.innerHTML = '<span style="color: #e74c3c; font-size: 0.9rem;">Erreur réseau.</span>';
+                    teamListContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: #e74c3c;">Erreur réseau.</div>';
                 });
         }
 
-        // 4. DÉCLENCHEURS (Au chargement, et quand on change de projet)
+        // Chargement initial
         if (projectSelect.value) {
             loadTeam(projectSelect.value);
         }
 
+        // Recharger l'équipe si on change de projet
         projectSelect.addEventListener('change', function() {
+            // Optionnel : On peut vider les anciens "currentAssignees" quand on change de projet
+            currentAssignees.length = 0; 
             loadTeam(this.value);
         });
-    });
-</script>
+    </script>
 @endsection

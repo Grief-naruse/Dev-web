@@ -64,6 +64,9 @@ Route::middleware(['auth', CheckRole::class.':admin'])->group(function () {
     // Le CRUD complet des clients est un privilège exclusif de l'Administrateur
     Route::resource('clients', ClientController::class);
     
+    // ✨ NOUVEAU : La gestion complète des accès
+    Route::resource('users', App\Http\Controllers\UserController::class);
+    
 });
 
 // Les routes d'authentification (Login, Register, Password Reset)

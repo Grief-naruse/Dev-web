@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Models\TimeEntry;
@@ -12,38 +11,86 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 📈 1. STATISTIQUES GLOBALES
+        $user = Auth::user();
+
+        // On prépare la structure attendue par ta vue Blade
         $stats = [
-            'total_projects' => Project::count(),
-            'active_tickets' => Ticket::whereIn('status', ['todo', 'in_progress', 'in_review'])->count(),
-            'completed_tasks' => Ticket::where('status', 'completed')->count(),
-
-            // Calcul du temps total consommé sur l'ensemble de l'ERP
-            'total_hours' => (float) TimeEntry::sum('duration'),
-
-            // Ratio de complétion (prévention division par zéro)
-            'completion_rate' => Ticket::count() > 0
-                ? round((Ticket::where('status', 'completed')->count() / Ticket::count()) * 100)
-                : 0,
+            'total_projects' => 0,
+            'active_tickets' => 0,
+            'total_hours'    => 0,
+            'completion_rate'=> 0,
         ];
+        
+        $recentActivities = collect();
+        $criticalProjects = collect();
 
-        // 📋 2. ACTIVITÉS RÉCENTES (Tickets mis à jour ou créés)
-        $recentActivities = Ticket::with(['project.client', 'assignees', 'timeEntries']) // 👈 On ajoute project.client et timeEntries
-            ->latest('updated_at')
-            ->take(6)
-            ->get();
+        // ✨ ASTUCE DE PRO : On stocke la requête complexe dans une variable pour ne pas la répéter !
+        $criticalCondition = function ($query) {
+            $query->whereIn('priority', ['high', 'urgent'])->where('status', '!=', 'completed');
+        };
 
-        // 🏗️ 3. PROJETS CRITIQUES (Ceux avec des tickets urgents)
-        $criticalProjects = Project::whereHas('tickets', function ($query) {
-            $query->where('priority', 'urgent')->where('status', '!=', 'completed');
-        })
-            ->withCount([
-                'tickets' => function ($query) {
-                    $query->where('status', '!=', 'completed');
-                }
-            ])
-            ->take(3)
-            ->get();
+        if ($user->isAdmin()) {
+            // 👑 STATISTIQUES GLOBALES DE L'AGENCE
+            $stats['total_projects'] = Project::where('status', 'active')->count();
+            $stats['active_tickets'] = Ticket::where('status', '!=', 'completed')->count();
+            $stats['total_hours']    = TimeEntry::sum('duration');
+
+            $totalTickets = Ticket::count();
+            $completed = Ticket::where('status', 'completed')->count();
+            $stats['completion_rate'] = $totalTickets > 0 ? round(($completed / $totalTickets) * 100) : 0;
+
+            $recentActivities = Ticket::with(['project.client', 'assignees', 'timeEntries'])
+                ->latest('updated_at')->take(5)->get();
+
+            // Correction SQLite : On utilise whereHas au lieu de having
+            $criticalProjects = Project::withCount(['tickets as tickets_count' => $criticalCondition])
+                ->whereHas('tickets', $criticalCondition)
+                ->orderByDesc('tickets_count')->take(3)->get();
+
+        } elseif ($user->isCollaborator()) {
+            // 🧑‍💻 STATISTIQUES DU DÉVELOPPEUR
+            $projectIds = $user->projects()->pluck('projects.id');
+            
+            $stats['total_projects'] = $projectIds->count();
+            $stats['active_tickets'] = $user->tickets()->where('status', '!=', 'completed')->count();
+            $stats['total_hours']    = TimeEntry::where('user_id', $user->id)->sum('duration');
+
+            $totalTickets = $user->tickets()->count();
+            $completed = $user->tickets()->where('status', 'completed')->count();
+            $stats['completion_rate'] = $totalTickets > 0 ? round(($completed / $totalTickets) * 100) : 0;
+
+            $recentActivities = Ticket::whereIn('project_id', $projectIds)
+                ->with(['project.client', 'assignees', 'timeEntries'])
+                ->latest('updated_at')->take(5)->get();
+
+            $criticalProjects = Project::whereIn('id', $projectIds)
+                ->withCount(['tickets as tickets_count' => $criticalCondition])
+                ->whereHas('tickets', $criticalCondition)
+                ->orderByDesc('tickets_count')->take(3)->get();
+
+        } elseif ($user->isClient()) {
+            // 🏢 STATISTIQUES DU CLIENT (Cloisonnées à son entreprise)
+            $projectIds = Project::where('client_id', $user->client_id)->pluck('id');
+            
+            $stats['total_projects'] = Project::where('client_id', $user->client_id)->where('status', 'active')->count();
+            $stats['active_tickets'] = Ticket::whereIn('project_id', $projectIds)->where('status', '!=', 'completed')->count();
+            
+            $ticketIds = Ticket::whereIn('project_id', $projectIds)->pluck('id');
+            $stats['total_hours']    = TimeEntry::whereIn('ticket_id', $ticketIds)->sum('duration');
+
+            $totalTickets = Ticket::whereIn('project_id', $projectIds)->count();
+            $completed = Ticket::whereIn('project_id', $projectIds)->where('status', 'completed')->count();
+            $stats['completion_rate'] = $totalTickets > 0 ? round(($completed / $totalTickets) * 100) : 0;
+
+            $recentActivities = Ticket::whereIn('project_id', $projectIds)
+                ->with(['project.client', 'assignees', 'timeEntries'])
+                ->latest('updated_at')->take(5)->get();
+
+            $criticalProjects = Project::where('client_id', $user->client_id)
+                ->withCount(['tickets as tickets_count' => $criticalCondition])
+                ->whereHas('tickets', $criticalCondition)
+                ->orderByDesc('tickets_count')->take(3)->get();
+        }
 
         return view('dashboard', compact('stats', 'recentActivities', 'criticalProjects'));
     }

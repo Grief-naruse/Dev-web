@@ -13,9 +13,14 @@ class TimeEntryController extends Controller
      */
     public function store(StoreTimeEntryRequest $request): RedirectResponse
     {
-        TimeEntry::create($request->validated());
+        // On récupère les données validées
+        $data = $request->validated();
+        
+        // ✨ On force l'identité de l'auteur (Enterprise Ready)
+        $data['user_id'] = auth()->id();
 
-        // On renvoie l'utilisateur directement sur la page du ticket avec un message de succès
+        TimeEntry::create($data);
+
         return redirect()->back()
             ->with('success', '⏱️ Temps de travail ajouté avec succès !');
     }

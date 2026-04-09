@@ -3,18 +3,28 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreClientRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // On autorise tout le monde pour l'instant (on verra les rôles plus tard)
+        return true; 
     }
 
     public function rules(): array
     {
+        // On récupère l'ID du client depuis l'URL si on est en mode "Update"
+        $clientId = $this->route('client') ? $this->route('client')->id : null;
+
         return [
-            'name' => 'required|string|min:3|max:255|unique:clients,name',
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:255',
+                Rule::unique('clients', 'name')->ignore($clientId),
+            ],
         ];
     }
 

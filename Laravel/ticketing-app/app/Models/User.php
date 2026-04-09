@@ -7,34 +7,26 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // Ajout pour la relation clientEnterprise
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
         'client_id',
-        'avatar' // <-- AJOUT d'avatar ICI
+        'avatar'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     */
     protected function casts(): array
     {
         return [
@@ -50,13 +42,19 @@ class User extends Authenticatable
         return $this->belongsToMany(Project::class);
     }
 
-    public function assignedTickets()
+    public function assignedTickets(): BelongsToMany
     {
         return $this->belongsToMany(Ticket::class, 'ticket_user');
     }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
+    }
+
+    public function clientEnterprise(): BelongsTo
+    {
+        return $this->belongsTo(Client::class, 'client_id');
     }
 
     // --- LOGIQUE MÉTIER & HELPERS ---
@@ -76,34 +74,8 @@ class User extends Authenticatable
         return $this->role === 'client';
     }
 
-    /**
-     * ✨ NOUVEAU HELPER ENTERPRISE : Génère l'URL de l'avatar ou renvoie null
-     */
-    public function avatarUrl()
+    public function avatarUrl(): ?string
     {
-        if ($this->avatar) {
-            // Laravel sert les fichiers publics via le disk 'public' qu'on verra après
-            return asset('storage/avatars/' . $this->avatar);
-        }
-        return null; // Pas d'avatar, on gérera le placeholder dans la vue
+        return $this->avatar ? asset('storage/avatars/' . $this->avatar) : null;
     }
-    /**
-     * L'entreprise (Client) à laquelle cet utilisateur appartient.
-     */
-    public function clientEnterprise()
-    {
-        return $this->belongsTo(Client::class, 'client_id');
-    }
-
-    public function getAvatarUrl()
-    {
-        if ($this->avatar) {
-            return asset('storage/avatars/' . $this->avatar);
-        }
-
-        // Si pas d'avatar, on peut utiliser un service comme UI Avatars 
-        // ou simplement renvoyer null pour gérer l'initiale en CSS
-        return null;
-    }
-
 }

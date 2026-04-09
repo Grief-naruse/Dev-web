@@ -25,9 +25,11 @@ class ProjectController extends Controller
             // 🧑‍💻 Le collaborateur ne voit que SES projets (via la table pivot)
             $projects = $user->projects()->with('client')->get();
             
+        } elseif ($user->isClient()) {
+            // 👤 ✨ NOUVEAU : Le client voit tous les projets liés à son entreprise
+            $projects = Project::where('client_id', $user->client_id)->with('client')->get();
+            
         } else {
-            // 👤 Le client (On affichera ses projets une fois son compte lié à une entreprise)
-            // Pour l'instant, on sécurise en renvoyant une collection vide.
             $projects = collect();
         }
 
@@ -87,9 +89,14 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
 
-        // 🛡️ Vérification des droits d'accès à CE projet précis
+        // 🛡️ Le collaborateur doit faire partie de l'équipe
         if ($user->isCollaborator() && !$user->projects->contains($project->id)) {
             abort(403, 'Vous n\'êtes pas affecté à ce projet.');
+        }
+
+        // 🛡️ ✨ NOUVEAU : Le client ne peut voir QUE les projets de sa propre entreprise
+        if ($user->isClient() && $project->client_id !== $user->client_id) {
+            abort(403, 'Accès refusé : Ce projet n\'appartient pas à votre entreprise.');
         }
 
         return view('projects.show', compact('project'));

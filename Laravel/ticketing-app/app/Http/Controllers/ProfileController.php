@@ -47,7 +47,7 @@ class ProfileController extends Controller
     {
         // 1. Validation stricte du fichier (c'est une image, max 2MB)
         $request->validate([
-            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // Max 2MB
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:8192'], // Max 2MB
         ]);
 
         $user = $request->user();

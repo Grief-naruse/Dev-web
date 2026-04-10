@@ -78,4 +78,8 @@ class User extends Authenticatable
     {
         return $this->avatar ? asset('storage/avatars/' . $this->avatar) : null;
     }
+    public function tickets()
+    {
+        return $this->belongsToMany(Ticket::class);
+    }
 }
